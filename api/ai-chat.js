@@ -124,60 +124,63 @@ async function callCohere(systemPrompt, message, chatHistory, maxTokens) {
     return await response.json();
 }
 
-// === MAIN LOGIC LOOP (YADDASHT KE SATH) ===
-// === MAIN LOGIC LOOP (NAYA, DEBUGGING WALA VERSION) ===
+// === MAIN LOGIC LOOP (REALTIME DATABASE KE SAHI CODE KE SATH) ===
 app.post('/', async (req, res) => {
-  console.log("--- NAYA MESSAGE MILA ---"); // Checkpoint 1
+  console.log("--- NAYA MESSAGE MILA ---");
   try {
     let { message, chatId } = req.body;
-    console.log(`Message: "${message}", Chat ID: ${chatId}`); // Checkpoint 2
+    console.log(`Message: "${message}", Chat ID: ${chatId}`);
+
+    // Realtime Database ka sahi tareeka: db.ref()
+    const chatRef = db.ref(`chats/${chatId}`);
 
     if (!chatId) {
-      chatId = db.collection('chats').doc().id;
-      console.log(`Nayi chat shuru hui. ID: ${chatId}`); // Checkpoint 3
+      // Agar nayi chat hai, to ek nayi ID banayein
+      chatId = chatRef.push().key; // Nayi ID Realtime DB se li
+      console.log(`Nayi chat shuru hui. ID: ${chatId}`);
     }
 
-    const chatDoc = await db.collection('chats').doc(chatId).get();
-    let chatHistory = chatDoc.exists ? chatDoc.data().history : [];
-    console.log(`Purani history mein ${chatHistory.length} messages hain.`); // Checkpoint 4
+    // Database se purani history nikalein (Realtime DB ka tareeka)
+    const snapshot = await db.ref(`chats/${chatId}`).once('value');
+    let chatHistory = snapshot.exists() ? snapshot.val().history : [];
+    console.log(`Purani history mein ${chatHistory.length} messages hain.`);
 
-    console.log("AI (Cohere) ko bulane ja raha hoon..."); // Checkpoint 5
+    console.log("AI (Cohere) ko bulane ja raha hoon...");
     let cohereResponse = await callCohere(systemPrompt, message, chatHistory, 2000);
     let aiText = cohereResponse.text;
-    console.log("✅ AI se jawab mil gaya."); // Checkpoint 6
+    console.log("✅ AI se jawab mil gaya.");
 
     // Tool istemal karne ka logic (Ismein koi tabdeeli nahi)
     try {
       const toolCall = JSON.parse(aiText);
       if (toolCall.tool_name === 'google_search') {
-        console.log("AI ne Google Search tool istemal karne ko kaha hai."); // Checkpoint 7
+        console.log("AI ne Google Search tool istemal karne ko kaha hai.");
         const toolResult = await google_search(toolCall.parameters.query);
         const toolHistory = [...chatHistory, { role: "USER", message: message }, { role: "CHATBOT", message: aiText }];
         const finalMessage = `Here are the search results. Please use them to answer my original question:\n\n${toolResult}`;
         
-        console.log("AI ko dobara bula raha hoon, search results ke sath..."); // Checkpoint 8
+        console.log("AI ko dobara bula raha hoon, search results ke sath...");
         cohereResponse = await callCohere(systemPrompt, finalMessage, toolHistory, 2000);
         aiText = cohereResponse.text;
-        console.log("✅ Search ke baad AI se final jawab mil gaya."); // Checkpoint 9
+        console.log("✅ Search ke baad AI se final jawab mil gaya.");
       }
     } catch (e) {
       // Aam text hai, kuch na karein
     }
 
     const newHistory = [...chatHistory, { role: "USER", message: message }, { role: "CHATBOT", message: aiText }];
-    console.log("Nayi history ko database mein save kar raha hoon..."); // Checkpoint 10
-    await db.collection('chats').doc(chatId).set({ history: newHistory });
-    console.log("✅ History database mein save ho gayi."); // Checkpoint 11
+    console.log("Nayi history ko database mein save kar raha hoon...");
+    await db.ref(`chats/${chatId}`).set({ history: newHistory }); // History save karne ka sahi tareeka
+    console.log("✅ History database mein save ho gayi.");
 
-    console.log("Audio generate karne ja raha hoon..."); // Checkpoint 12
+    console.log("Audio generate karne ja raha hoon...");
     const audioUrl = await generateAudio(aiText);
-    console.log("✅ Audio generate ho gaya."); // Checkpoint 13
+    console.log("✅ Audio generate ho gaya.");
 
-    console.log("--- FINAL JAWAB WAPAS BHEJ RAHA HOON ---"); // Checkpoint 14
+    console.log("--- FINAL JAWAB WAPAS BHEJ RAHA HOON ---");
     res.status(200).json({ reply: aiText, audioUrl: audioUrl, chatId: chatId });
 
   } catch (error) {
-    // Agar in sab steps mein kahin bhi error aaya, to woh yahan nazar aayega
     console.error("❌❌❌ MAIN LOGIC MEIN BOHOT BARA ERROR AAYA ❌❌❌:", error);
     res.status(500).json({ error: "AI agent is currently offline due to an internal error." });
   }

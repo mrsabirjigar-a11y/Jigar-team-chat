@@ -1,8 +1,18 @@
-// File Name: netlify/functions/ai-chat.js (VERSION 9.0 - THE FINAL "ONE STORE" VERSION)
-
+// === STEP 1: RENDER KE LIYE ZAROORI LIBRARIES ===
+const express = require('express');
+const cors = require('cors');
 const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
 
-// === THE "ONE STORE" KNOWLEDGE BASE ===
+// Express app (Render ka engine) banayein
+const app = express();
+const port = process.env.PORT || 10000;
+app.use(cors());
+app.use(express.json());
+
+
+// === STEP 2: AAPKA DATA AUR HIDAYAT YAHAN PASTE KAREIN ===
+
+// YAHAN APNA 'knowledgeBase' WALA POORA VARIABLE PASTE KAREIN
 const knowledgeBase = `{
   "response_library": [
     {
@@ -465,63 +475,7 @@ const knowledgeBase = `{
   ]
 }`;
 
-async function generateAudio(text) {
-  const AWS_ACCESS_KEY_ID = process.env.MY_AWS_ACCESS_KEY_ID;
-  const AWS_SECRET_ACCESS_KEY = process.env.MY_AWS_SECRET_ACCESS_KEY;
-  const AWS_REGION = process.env.MY_AWS_REGION;
-  if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_REGION) {
-    return null;
-  }
-  const pollyClient = new PollyClient({
-    region: AWS_REGION,
-    credentials: { accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY },
-  });
-  const params = { Text: text, OutputFormat: "mp3", VoiceId: "Kajal", Engine: "neural", LanguageCode: "en-IN" };
-  try {
-    const command = new SynthesizeSpeechCommand(params);
-    const { AudioStream } = await pollyClient.send(command);
-    const chunks = [];
-    for await (const chunk of AudioStream) { chunks.push(chunk); }
-    const buffer = Buffer.concat(chunks);
-    const audioBase64 = buffer.toString("base64");
-    return `data:audio/mpeg;base64,${audioBase64}`;
-  } catch (error) {
-    console.error("❌ AWS Polly se audio generate karne mein masla:", error);
-    return null;
-  }
-}
 
-async function callCohere(systemPrompt, message, chatHistory, imageBase64, maxTokens) {
-  const COHERE_API_KEY = process.env.COHERE_API_KEY;
-  const COHERE_API_URL = "https://api.cohere.ai/v1/chat";
-  const requestBody = { model: "command-r-plus-08-2024", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: maxTokens };
-  if (imageBase64) {
-    const base64Data = imageBase64.split(',')[1];
-    requestBody.documents = [{ "file": base64Data, "filename": "screenshot.jpg" }];
-  }
-  const response = await fetch(COHERE_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` },
-    body: JSON.stringify(requestBody)
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Cohere API responded with status: ${response.status}`);
-  }
-  const cohereData = await response.json();
-  return cohereData.text;
-}
-
-exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
-  try {
-    const { message, imageBase64, chatHistory } = JSON.parse(event.body);
-    if (!message && !imageBase64) {
-      return { statusCode: 400, body: 'Message or image is required' };
-    }
-    
     const systemPrompt = `
 <instructions>
     You are a world-class, expert, and highly motivational recruitment agent for 'Jigar Team Official'. Your persona is like a friendly, caring, and sharp female guide.
@@ -595,23 +549,81 @@ exports.handler = async (event) => {
 `;
 
 
+async function generateAudio(text) {
+  const AWS_ACCESS_KEY_ID = process.env.MY_AWS_ACCESS_KEY_ID;
+  const AWS_SECRET_ACCESS_KEY = process.env.MY_AWS_SECRET_ACCESS_KEY;
+  const AWS_REGION = process.env.MY_AWS_REGION;
+  if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_REGION) {
+    return null;
+  }
+  const pollyClient = new PollyClient({
+    region: AWS_REGION,
+    credentials: { accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY },
+  });
+  const params = { Text: text, OutputFormat: "mp3", VoiceId: "Kajal", Engine: "neural", LanguageCode: "en-IN" };
+  try {
+    const command = new SynthesizeSpeechCommand(params);
+    const { AudioStream } = await pollyClient.send(command);
+    const chunks = [];
+    for await (const chunk of AudioStream) { chunks.push(chunk); }
+    const buffer = Buffer.concat(chunks);
+    const audioBase64 = buffer.toString("base64");
+    return `data:audio/mpeg;base64,${audioBase64}`;
+  } catch (error) {
+    console.error("❌ AWS Polly se audio generate karne mein masla:", error);
+    return null;
+  }
+}
 
+async function callCohere(systemPrompt, message, chatHistory, imageBase64, maxTokens) {
+  const COHERE_API_KEY = process.env.COHERE_API_KEY;
+  const COHERE_API_URL = "https://api.cohere.ai/v1/chat";
+  const requestBody = { model: "command-r-plus-08-2024", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: maxTokens };
+  if (imageBase64) {
+    const base64Data = imageBase64.split(',')[1];
+    requestBody.documents = [{ "file": base64Data, "filename": "screenshot.jpg" }];
+  }
+  const response = await fetch(COHERE_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` },
+    body: JSON.stringify(requestBody)
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Cohere API responded with status: ${response.status}`);
+  }
+  const cohereData = await response.json();
+  return cohereData.text;
+}
+
+
+// === STEP 4: NAYA ENGINE JO AAPKE FUNCTIONS KO ISTEMAL KAREGA ===
+
+// Yeh naya hissa hai jo Render ke liye zaroori hai
+app.post('/', async (req, res) => {
+  try {
+    // Yeh line `JSON.parse(event.body)` ki jagah hai
+    const { message, imageBase64, chatHistory } = req.body;
+
+    if (!message && !imageBase64) {
+      return res.status(400).json({ error: 'Message or image is required' });
+    }
 
     const aiText = await callCohere(systemPrompt, message, chatHistory || [], imageBase64, 1000);
     const audioUrl = await generateAudio(aiText);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ reply: aiText, audioUrl: audioUrl }),
-    };
+    // Yeh line `return { statusCode: 200, ... }` ki jagah hai
+    res.status(200).json({ reply: aiText, audioUrl: audioUrl });
+
   } catch (error) {
     console.error("AI Error:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "AI agent is currently offline. Please try again later." }),
-    };
+    // Yeh line `return { statusCode: 500, ... }` ki jagah hai
+    res.status(500).json({ error: "AI agent is currently offline. Please try again later." });
   }
-};
+});
 
+// Server ko start karne ki command
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 
- 

@@ -1,0 +1,14 @@
+{
+  "name": "jigar-team-ai-chat",
+  "version": "1.0.0",
+  "description": "AI Chat with AWS Polly TTS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-polly": "^3.525.0"
+  }
+}

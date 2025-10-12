@@ -19,7 +19,7 @@ try {
   console.error("❌ Firebase Yaddasht Connection FAILED:", error.message);
 }
 
-const db = admin.firestore(); // Database ka connection
+const db = admin.database(); // Database ka connection
 
 const app = express();
 const port = process.env.PORT || 10000;

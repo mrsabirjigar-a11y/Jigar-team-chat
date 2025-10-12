@@ -471,7 +471,7 @@ const AGENT_PROFILES = [
     let attachedImageBase64 = null;
 var currentAgentIndex = 0;
 var messagesSinceAgentSwitch = 0;
-    
+    let currentChatId = localStorage.getItem('chatId') || null;
 
     
     // --- 3. SCREEN & UI MANAGEMENT (Aapka Original Code) ---
@@ -748,20 +748,24 @@ async function sendMessage(userId, messageData) {
         const { reply, audioUrl } = await response.json();
         console.log(`💬 AI ka jawab aur audio mil gaya, ab save kar raha hoon.`);
 
-        
-        
-        // 7. AI ka jawab (text aur audio URL ke sath) Firebase mein save karo (Aapka original code)
-        const currentAgent = AGENT_PROFILES[currentAgentIndex];
-        await push(chatRef, { 
-            sender: 'ai', 
-            text: reply, 
-            audioUrl: audioUrl || null,
-            agentName: currentAgent.name,
-            agentDp: currentAgent.dp,
-            timestamp: serverTimestamp() 
-        });
-        console.log("✅ AI reply with audio saved to Firebase.");
-        
+        // YEH NAYI LOGIC ADD KARNI HAI
+if (chatId) {
+    currentChatId = chatId;
+    localStorage.setItem('chatId', chatId);
+    }
+
+        // YEH SAHI CODE HAI
+const aiMsgObject = { 
+    sender: 'ai', 
+    text: reply, 
+    audioUrl: audioUrl, 
+    agentName: AGENT_PROFILES[currentAgentIndex].name, 
+    agentDp: AGENT_PROFILES[currentAgentIndex].dp, 
+    timestamp: Date.now() 
+};
+displayMessage(aiMsgObject);
+    
+          
     } catch (error) {
         console.error("❌ sendMessage function mein masla:", error);
         // Error ki soorat mein bhi typing indicator hide karna zaroori hai

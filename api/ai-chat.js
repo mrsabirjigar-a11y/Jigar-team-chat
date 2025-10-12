@@ -125,63 +125,61 @@ async function callCohere(systemPrompt, message, chatHistory, maxTokens) {
 }
 
 // === MAIN LOGIC LOOP (YADDASHT KE SATH) ===
+// === MAIN LOGIC LOOP (NAYA, DEBUGGING WALA VERSION) ===
 app.post('/', async (req, res) => {
+  console.log("--- NAYA MESSAGE MILA ---"); // Checkpoint 1
   try {
-    // Ab hum 'chatId' bhi le rahe hain
     let { message, chatId } = req.body;
-    
+    console.log(`Message: "${message}", Chat ID: ${chatId}`); // Checkpoint 2
+
     if (!chatId) {
-      // Agar nayi chat hai, to ek nayi ID banayein
       chatId = db.collection('chats').doc().id;
+      console.log(`Nayi chat shuru hui. ID: ${chatId}`); // Checkpoint 3
     }
 
-    // Database se purani history nikalein
     const chatDoc = await db.collection('chats').doc(chatId).get();
     let chatHistory = chatDoc.exists ? chatDoc.data().history : [];
+    console.log(`Purani history mein ${chatHistory.length} messages hain.`); // Checkpoint 4
 
-    // Pehli baar AI se poochte hain
+    console.log("AI (Cohere) ko bulane ja raha hoon..."); // Checkpoint 5
     let cohereResponse = await callCohere(systemPrompt, message, chatHistory, 2000);
     let aiText = cohereResponse.text;
+    console.log("✅ AI se jawab mil gaya."); // Checkpoint 6
 
-    // Check karein ke AI ne tool istemal karne ko kaha hai ya nahi
+    // Tool istemal karne ka logic (Ismein koi tabdeeli nahi)
     try {
       const toolCall = JSON.parse(aiText);
       if (toolCall.tool_name === 'google_search') {
+        console.log("AI ne Google Search tool istemal karne ko kaha hai."); // Checkpoint 7
         const toolResult = await google_search(toolCall.parameters.query);
-        
-        // Naye logic ke sath history update karein
-        const toolHistory = [
-            ...chatHistory,
-            { role: "USER", message: message },
-            { role: "CHATBOT", message: aiText }
-        ];
-        
+        const toolHistory = [...chatHistory, { role: "USER", message: message }, { role: "CHATBOT", message: aiText }];
         const finalMessage = `Here are the search results. Please use them to answer my original question:\n\n${toolResult}`;
+        
+        console.log("AI ko dobara bula raha hoon, search results ke sath..."); // Checkpoint 8
         cohereResponse = await callCohere(systemPrompt, finalMessage, toolHistory, 2000);
         aiText = cohereResponse.text;
+        console.log("✅ Search ke baad AI se final jawab mil gaya."); // Checkpoint 9
       }
     } catch (e) {
       // Aam text hai, kuch na karein
     }
 
-    // Nayi history ko database mein save karein
-    const newHistory = [
-        ...chatHistory,
-        { role: "USER", message: message },
-        { role: "CHATBOT", message: aiText }
-    ];
+    const newHistory = [...chatHistory, { role: "USER", message: message }, { role: "CHATBOT", message: aiText }];
+    console.log("Nayi history ko database mein save kar raha hoon..."); // Checkpoint 10
     await db.collection('chats').doc(chatId).set({ history: newHistory });
+    console.log("✅ History database mein save ho gayi."); // Checkpoint 11
 
+    console.log("Audio generate karne ja raha hoon..."); // Checkpoint 12
     const audioUrl = await generateAudio(aiText);
-    // Jawab ke sath 'chatId' bhi wapas bhejein taake browser usay yaad rakhe
+    console.log("✅ Audio generate ho gaya."); // Checkpoint 13
+
+    console.log("--- FINAL JAWAB WAPAS BHEJ RAHA HOON ---"); // Checkpoint 14
     res.status(200).json({ reply: aiText, audioUrl: audioUrl, chatId: chatId });
 
   } catch (error) {
-    console.error("Main Logic Loop Error:", error);
-    res.status(500).json({ error: "AI agent is currently offline. Please try again later." });
+    // Agar in sab steps mein kahin bhi error aaya, to woh yahan nazar aayega
+    console.error("❌❌❌ MAIN LOGIC MEIN BOHOT BARA ERROR AAYA ❌❌❌:", error);
+    res.status(500).json({ error: "AI agent is currently offline due to an internal error." });
   }
 });
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+      

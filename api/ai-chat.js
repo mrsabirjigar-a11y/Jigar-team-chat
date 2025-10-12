@@ -52,7 +52,7 @@ You have access to the following tools. To use a tool, you MUST respond with a J
 **1. google_search**
    - **Description:** Use this tool to get real-time information from the internet, find recent news, look for specific links (like YouTube videos), or find solutions to technical problems.
    - **Parameters:**
-     - `query` (string, required): The search query for Google.
+     - query (string, required): The search query for Google.
    - **Example Usage (Your Response):**
      {
        "tool_name": "google_search",

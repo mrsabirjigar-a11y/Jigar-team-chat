@@ -3,17 +3,22 @@ const express = require('express');
 const cors = require('cors');
 const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
 const admin = require('firebase-admin'); // Firebase ko add kiya
-
+const fs = require('fs'); // File System library, files parhne ke liye
 // === FIREBASE INITIALIZATION (YADDASHT KA SETUP) ===
+// === FIREBASE INITIALIZATION (YADDASHT KA NAYA SETUP) ===
 try {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  // Render 'Secret Files' ko is path par rakhta hai
+  const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
+  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
   });
-  console.log("✅ Firebase Yaddasht (Memory) Connected!");
+  console.log("✅ Firebase Yaddasht (Memory) Connected from Secret File!");
 } catch (error) {
   console.error("❌ Firebase Yaddasht Connection FAILED:", error.message);
 }
+
 const db = admin.firestore(); // Database ka connection
 
 const app = express();

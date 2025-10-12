@@ -469,7 +469,10 @@ const AGENT_PROFILES = [
     let attachedImageBase64 = null;
 var currentAgentIndex = 0;
 var messagesSinceAgentSwitch = 0;
+let currentChatId = localStorage.getItem('chatId') || null;
+    
 
+    
     // --- 3. SCREEN & UI MANAGEMENT (Aapka Original Code) ---
     function setRealViewportHeight() {
         document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
@@ -717,18 +720,18 @@ async function sendMessage(userId, messageData) {
             });
         }
 
-        // 5. Backend se jawab (text aur audio) aane ka POORA INTEZAR karo
         const response = await fetch('https://jigar-team-chat-backend.onrender.com', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                mode: 'chat',
-                message: messageData.text, 
-                imageBase64: messageData.imageBase64,
-                chatHistory: chatHistory,
-                summary: currentSummary
-            })
-        });
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        message: userMessage,
+        chatHistory: chatHistory, // Yeh line ab zaroori nahi, lekin isay rehne dein
+        chatId: currentChatId, // Yeh NAYI line hai jo ID bhej rahi hai
+        imageBase64: imageBase64
+    })
+});
 
         // 6. Jaise hi jawab aa jaye, foran typing indicator BAND kar do
         typingIndicator.style.display = 'none';
@@ -744,6 +747,12 @@ async function sendMessage(userId, messageData) {
         const { reply, audioUrl } = await response.json();
         console.log(`💬 AI ka jawab aur audio mil gaya, ab save kar raha hoon.`);
 
+        // YEH NAYI LOGIC ADD KARNI HAI
+if (chatId) {
+    currentChatId = chatId;
+    localStorage.setItem('chatId', chatId);
+}
+        
         // 7. AI ka jawab (text aur audio URL ke sath) Firebase mein save karo (Aapka original code)
         const currentAgent = AGENT_PROFILES[currentAgentIndex];
         await push(chatRef, { 

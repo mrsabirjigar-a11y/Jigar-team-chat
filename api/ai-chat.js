@@ -5,19 +5,21 @@ const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly"
 const admin = require('firebase-admin'); // Firebase ko add kiya
 const fs = require('fs'); // File System library, files parhne ke liye
 // === FIREBASE INITIALIZATION (YADDASHT KA SETUP) ===
-// === FIREBASE INITIALIZATION (YADDASHT KA NAYA SETUP) ===
+// === FIREBASE INITIALIZATION (MUKAMMAL AUR FINAL SETUP) ===
 try {
-  // Render 'Secret Files' ko is path par rakhta hai
   const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
   const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    // YEH NAYI, ZAROORI LINE ADD KI HAI
+    databaseURL: "https://life-change-easy-default-rtdb.firebaseio.com" 
   });
-  console.log("✅ Firebase Yaddasht (Memory) Connected from Secret File!");
+  console.log("✅ Firebase Yaddasht (Memory) Connected with Database URL!");
 } catch (error) {
   console.error("❌ Firebase Yaddasht Connection FAILED:", error.message);
 }
+
 
 const db = admin.database(); // Database ka connection
 

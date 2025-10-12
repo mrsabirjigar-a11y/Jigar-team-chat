@@ -62,24 +62,31 @@ You have access to the following tools. To use a tool, you MUST respond with a J
 - After the tool runs, you will receive its results, and then you will formulate the final, user-friendly answer based on those results.
 `;
 
-// === TOOLS IMPLEMENTATION ===
+// === TOOLS IMPLEMENTATION (SERPER KE SATH) ===
 async function google_search(query) {
-    // ... (Ismein koi tabdeeli nahi)
-    console.log(`TOOL: Running Google Search for query: ${query}`);
-    const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
-    if (!TAVILY_API_KEY) return "Error: Tavily API key is not set.";
-    try {
-        const response = await fetch('https://api.tavily.com/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ api_key: TAVILY_API_KEY, query: query, search_depth: "basic", include_answer: true, max_results: 5 }),
-        });
-        const data = await response.json();
-        return JSON.stringify(data.results || data.answer || "No results found.");
-    } catch (error) {
-        return `Error performing search: ${error.message}`;
-    }
+  console.log(`TOOL: Running Serper Search for query: ${query}`);
+  const SERPER_API_KEY = process.env.SERPER_API_KEY;
+  if (!SERPER_API_KEY) {
+    return "Error: Serper API key is not set. Cannot perform search.";
+  }
+  try {
+    const response = await fetch('https://google.serper.dev/search', {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': SERPER_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ q: query }),
+    });
+    const data = await response.json();
+    // Natijay ko aasan format mein return karein
+    return JSON.stringify(data.organic || "No results found.");
+  } catch (error) {
+    console.error("Serper Search Tool Error:", error);
+    return `Error performing search: ${error.message}`;
+  }
 }
+
 
 // === CORE AI & AUDIO FUNCTIONS ===
 async function generateAudio(text) {

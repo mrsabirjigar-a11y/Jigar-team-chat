@@ -660,113 +660,74 @@ get(userStateRef).then((snapshot) => {
         }
     });
 
-// === FINAL, UPGRADED sendMessage FUNCTION (WITH SYNCHRONIZED TYPING) ===
+    // =================================================================
+// === FINAL, SAHI, AUR SAADAH sendMessage FUNCTION ===
+// =================================================================
 async function sendMessage(userId, messageData) {
-    const chatRef = ref(db, `chats/user_${userId}`);
-    const summaryRef = ref(db, `chat_summaries/${userId}`);
+    // 1. User ka message foran screen par dikhao
+    displayMessage({
+        sender: 'user',
+        text: messageData.text,
+        imageBase64: messageData.imageBase64,
+        timestamp: Date.now()
+    });
+
+    // 2. Typing indicator dikhao
+    const typingIndicator = document.getElementById('typing-indicator');
+    typingIndicator.style.display = 'flex';
+    messagesArea.scrollTop = messagesArea.scrollHeight;
 
     try {
-        // 1. User ka message foran save karo (Aapka original code, bilkul theek hai)
-        await push(chatRef, {
-            sender: 'user',
-            text: messageData.text || null,
-            imageBase64: messageData.imageBase64 || null,
-            timestamp: serverTimestamp()
-        });
-        console.log("✅ User message saved to Firebase.");
-
-        // 2. Agent switch logic (Aapka original code, bilkul theek hai)
-        messagesSinceAgentSwitch++;
-        if (messagesSinceAgentSwitch >= 4) {
-            currentAgentIndex = (currentAgentIndex + 1) % AGENT_PROFILES.length;
-            messagesSinceAgentSwitch = 0;
-        }
-        await set(ref(db, `chat_users/${currentUser.uid}/agentIndex`), currentAgentIndex);
-        await set(ref(db, `chat_users/${currentUser.uid}/messagesSinceSwitch`), messagesSinceAgentSwitch);
-
-        // =================================================================
-        // === YAHAN NAYA LOGIC ADD HUA HAI (AAPKE PURANE CODE KI JAGAH) ===
-        // =================================================================
-
-        // 3. Typing indicator dikhana SHURU karo
-        const typingDp = document.getElementById('typing-dp');
-        typingDp.src = AGENT_PROFILES[currentAgentIndex].dp;
-        const typingIndicator = document.getElementById('typing-indicator');
-        typingIndicator.style.display = 'flex'; // 'block' ke bajaye 'flex' behtar hai
-        messagesArea.scrollTop = messagesArea.scrollHeight;
-
-        // 4. Pichli summary aur history get karo (Aapka original code)
-        const summarySnapshot = await get(summaryRef);
-        const currentSummary = summarySnapshot.exists() ? summarySnapshot.val().text : null;
-        const historyQuery = query(chatRef, limitToLast(6));
-        const historySnapshot = await get(historyQuery);
-        let chatHistory = [];
-        if (historySnapshot.exists()) {
-            historySnapshot.forEach(child => {
-                const msg = child.val();
-                if (msg.text) {
-                    chatHistory.push({ role: msg.sender === 'user' ? 'USER' : 'CHATBOT', message: msg.text });
-                }
-            });
-        }
-
-        // 5. Backend se jawab (text aur audio) aane ka POORA INTEZAR karo
+        // 3. Backend ko message bhejo aur jawab ka intezar karo
         const response = await fetch('https://jigar-team-chat-backend.onrender.com', {
-    method: 'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                mode: 'chat',
-                message: messageData.text, 
+            body: JSON.stringify({
+                message: messageData.text,
                 imageBase64: messageData.imageBase64,
-                chatHistory: chatHistory,
-                summary: currentSummary
+                chatId: currentChatId // Yahan se purani ID bhej rahe hain
             })
         });
 
-        // 6. Jaise hi jawab aa jaye, foran typing indicator BAND kar do
+        // 4. Jawab milte hi typing indicator band kar do
         typingIndicator.style.display = 'none';
 
-        // =================================================================
-        // === NAYA LOGIC YAHAN KHATAM HOTA HAI ===
-        // =================================================================
-
         if (!response.ok) {
-            throw new Error(`AI agent responded with status: ${response.status}`);
+            throw new Error(`Server responded with status: ${response.status}`);
         }
-        
-        const { reply, audioUrl } = await response.json();
-        console.log(`💬 AI ka jawab aur audio mil gaya, ab save kar raha hoon.`);
 
-        if (chatId) {
-    currentChatId = chatId;
-    localStorage.setItem('chatId', chatId);
-}
+        const data = await response.json();
 
-        // 7. AI ka jawab (text aur audio URL ke sath) Firebase mein save karo (Aapka original code)
-        const currentAgent = AGENT_PROFILES[currentAgentIndex];
-        await push(chatRef, { 
-            sender: 'ai', 
-            text: reply, 
-            audioUrl: audioUrl || null,
-            agentName: currentAgent.name,
-            agentDp: currentAgent.dp,
-            timestamp: serverTimestamp() 
+        // 5. YADDASHT KA SAB SE ZAROORI KAAM: Nayi ID ko save karo
+        if (data.chatId) {
+            currentChatId = data.chatId;
+            localStorage.setItem('chatId', currentChatId);
+        }
+
+        // 6. AI ka jawab screen par dikhao
+        displayMessage({
+            sender: 'ai',
+            text: data.reply,
+            audioUrl: data.audioUrl,
+            timestamp: Date.now()
         });
-        console.log("✅ AI reply with audio saved to Firebase.");
-        
+
     } catch (error) {
         console.error("❌ sendMessage function mein masla:", error);
-        // Error ki soorat mein bhi typing indicator hide karna zaroori hai
-        const typingIndicator = document.getElementById('typing-indicator');
-        if(typingIndicator) typingIndicator.style.display = 'none';
-        
-        await push(ref(db, `chats/user_${userId}`), {
+        typingIndicator.style.display = 'none'; // Error par bhi indicator band karo
+
+        // Error message screen par dikhao
+        displayMessage({
             sender: 'ai',
             text: "Maazrat, main abhi aapse rabta nahi kar pa rahi. Network mein masla ho sakta hai. Please thori der baad koshish karein.",
-            timestamp: serverTimestamp()
+            timestamp: Date.now()
         });
     }
     }
+                
+
+
+
 
         // loadMessages function (Aapka Original Code)
     function loadMessages(userId) {

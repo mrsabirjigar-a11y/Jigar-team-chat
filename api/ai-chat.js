@@ -2,11 +2,24 @@
 const express = require('express');
 const cors = require('cors');
 const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
+const admin = require('firebase-admin'); // Firebase ko add kiya
+
+// === FIREBASE INITIALIZATION (YADDASHT KA SETUP) ===
+try {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log("✅ Firebase Yaddasht (Memory) Connected!");
+} catch (error) {
+  console.error("❌ Firebase Yaddasht Connection FAILED:", error.message);
+}
+const db = admin.firestore(); // Database ka connection
 
 const app = express();
 const port = process.env.PORT || 10000;
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Limit barha di hai, image upload ke liye
+app.use(express.json({ limit: '10mb' }));
 
 // === AI PROMPT & CONFIGURATION ===
 const systemPrompt = `
@@ -50,39 +63,27 @@ You have access to the following tools. To use a tool, you MUST respond with a J
 `;
 
 // === TOOLS IMPLEMENTATION ===
-
-// Google Search Tool
 async function google_search(query) {
-  console.log(`TOOL: Running Google Search for query: ${query}`);
-  const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
-  if (!TAVILY_API_KEY) {
-    return "Error: Tavily API key is not set. Cannot perform search.";
-  }
-  try {
-    const response = await fetch('https://api.tavily.com/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api_key: TAVILY_API_KEY,
-        query: query,
-        search_depth: "basic",
-        include_answer: true,
-        max_results: 5
-      }),
-    });
-    const data = await response.json();
-    // Natijay ko aasan format mein return karein
-    return JSON.stringify(data.results || data.answer || "No results found.");
-  } catch (error) {
-    console.error("Google Search Tool Error:", error);
-    return `Error performing search: ${error.message}`;
-  }
+    // ... (Ismein koi tabdeeli nahi)
+    console.log(`TOOL: Running Google Search for query: ${query}`);
+    const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+    if (!TAVILY_API_KEY) return "Error: Tavily API key is not set.";
+    try {
+        const response = await fetch('https://api.tavily.com/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ api_key: TAVILY_API_KEY, query: query, search_depth: "basic", include_answer: true, max_results: 5 }),
+        });
+        const data = await response.json();
+        return JSON.stringify(data.results || data.answer || "No results found.");
+    } catch (error) {
+        return `Error performing search: ${error.message}`;
+    }
 }
 
 // === CORE AI & AUDIO FUNCTIONS ===
-
 async function generateAudio(text) {
-    // ... (Aapka generateAudio ka code yahan paste karein, koi tabdeeli nahi)
+    // ... (Ismein koi tabdeeli nahi)
     const AWS_ACCESS_KEY_ID = process.env.MY_AWS_ACCESS_KEY_ID;
     const AWS_SECRET_ACCESS_KEY = process.env.MY_AWS_SECRET_ACCESS_KEY;
     const AWS_REGION = process.env.MY_AWS_REGION;
@@ -97,13 +98,12 @@ async function generateAudio(text) {
         const buffer = Buffer.concat(chunks);
         return `data:audio/mpeg;base64,${buffer.toString("base64")}`;
     } catch (error) {
-        console.error("❌ AWS Polly Error:", error);
         return null;
     }
 }
 
 async function callCohere(systemPrompt, message, chatHistory, maxTokens) {
-    // ... (Aapka callCohere ka code yahan paste karein, koi tabdeeli nahi)
+    // ... (Ismein koi tabdeeli nahi)
     const COHERE_API_KEY = process.env.COHERE_API_KEY;
     const COHERE_API_URL = "https://api.cohere.ai/v1/chat";
     const requestBody = { model: "command-r-plus", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: maxTokens };
@@ -112,11 +112,20 @@ async function callCohere(systemPrompt, message, chatHistory, maxTokens) {
     return await response.json();
 }
 
-// === MAIN LOGIC LOOP ===
+// === MAIN LOGIC LOOP (YADDASHT KE SATH) ===
 app.post('/', async (req, res) => {
   try {
-    let { message, chatHistory } = req.body;
-    chatHistory = chatHistory || [];
+    // Ab hum 'chatId' bhi le rahe hain
+    let { message, chatId } = req.body;
+    
+    if (!chatId) {
+      // Agar nayi chat hai, to ek nayi ID banayein
+      chatId = db.collection('chats').doc().id;
+    }
+
+    // Database se purani history nikalein
+    const chatDoc = await db.collection('chats').doc(chatId).get();
+    let chatHistory = chatDoc.exists ? chatDoc.data().history : [];
 
     // Pehli baar AI se poochte hain
     let cohereResponse = await callCohere(systemPrompt, message, chatHistory, 2000);
@@ -126,24 +135,34 @@ app.post('/', async (req, res) => {
     try {
       const toolCall = JSON.parse(aiText);
       if (toolCall.tool_name === 'google_search') {
-        // Tool chalao
         const toolResult = await google_search(toolCall.parameters.query);
         
-        // Natijay ko chat history mein daalo
-        chatHistory.push({ role: "USER", message: message });
-        chatHistory.push({ role: "CHATBOT", message: aiText }); // AI ka tool istemal karne ka faisla
+        // Naye logic ke sath history update karein
+        const toolHistory = [
+            ...chatHistory,
+            { role: "USER", message: message },
+            { role: "CHATBOT", message: aiText }
+        ];
         
-        // AI ko dobara bulao, is baar natijay ke sath
         const finalMessage = `Here are the search results. Please use them to answer my original question:\n\n${toolResult}`;
-        cohereResponse = await callCohere(systemPrompt, finalMessage, chatHistory, 2000);
+        cohereResponse = await callCohere(systemPrompt, finalMessage, toolHistory, 2000);
         aiText = cohereResponse.text;
       }
     } catch (e) {
-      // Agar AI ne tool istemal nahi kiya, to yeh aam text hai. Kuch na karein.
+      // Aam text hai, kuch na karein
     }
 
+    // Nayi history ko database mein save karein
+    const newHistory = [
+        ...chatHistory,
+        { role: "USER", message: message },
+        { role: "CHATBOT", message: aiText }
+    ];
+    await db.collection('chats').doc(chatId).set({ history: newHistory });
+
     const audioUrl = await generateAudio(aiText);
-    res.status(200).json({ reply: aiText, audioUrl: audioUrl });
+    // Jawab ke sath 'chatId' bhi wapas bhejein taake browser usay yaad rakhe
+    res.status(200).json({ reply: aiText, audioUrl: audioUrl, chatId: chatId });
 
   } catch (error) {
     console.error("Main Logic Loop Error:", error);
@@ -154,3 +173,4 @@ app.post('/', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+   

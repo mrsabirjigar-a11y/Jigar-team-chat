@@ -462,7 +462,7 @@ const AGENT_PROFILES = [
     let attachedImageBase64 = null;
 var currentAgentIndex = 0;
 var messagesSinceAgentSwitch = 0;
-
+let currentChatId = localStorage.getItem('chatId') || null;
     // --- 3. SCREEN & UI MANAGEMENT (Aapka Original Code) ---
     function setRealViewportHeight() {
         document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
@@ -736,6 +736,11 @@ async function sendMessage(userId, messageData) {
         
         const { reply, audioUrl } = await response.json();
         console.log(`💬 AI ka jawab aur audio mil gaya, ab save kar raha hoon.`);
+
+        if (chatId) {
+    currentChatId = chatId;
+    localStorage.setItem('chatId', chatId);
+}
 
         // 7. AI ka jawab (text aur audio URL ke sath) Firebase mein save karo (Aapka original code)
         const currentAgent = AGENT_PROFILES[currentAgentIndex];

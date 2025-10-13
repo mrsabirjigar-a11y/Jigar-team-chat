@@ -1,5 +1,5 @@
 // =================================================================
-// === JIGAR TEAM AI - FINAL VERSION (YADDASHT + SEARCH + LOGGING) ===
+// === JIGAR TEAM AI - FINAL VERSION v2.0 (YADDASHT + SEARCH + LOGGING) ===
 // =================================================================
 
 // === LIBRARIES ===
@@ -135,12 +135,13 @@ app.post('/', async (req, res) => {
     
     console.log(`[${new Date().toISOString()}] --> INCOMING REQUEST | ChatID: ${chatId || 'New Chat'} | Message: "${message || 'No Text'}"`);
 
+    let chatRef;
     if (!chatId) {
       chatId = db.ref('chats').push().key;
       console.log(`[${chatId}] New chat created.`);
     }
     
-    const chatRef = db.ref(`chats/${chatId}`);
+    chatRef = db.ref(`chats/${chatId}`);
     const snapshot = await chatRef.once('value');
     let chatHistory = snapshot.exists() ? snapshot.val().history : [];
 
@@ -186,3 +187,4 @@ app.post('/', async (req, res) => {
 app.listen(port, () => {
   console.log(`✅ Server is running on port ${port} and waiting for messages...`);
 });
+    

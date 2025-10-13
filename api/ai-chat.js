@@ -119,7 +119,7 @@ async function generateAudio(text) {
 async function callCohere(systemPrompt, message, chatHistory, maxTokens) {
     const COHERE_API_KEY = process.env.COHERE_API_KEY;
     const COHERE_API_URL = "https://api.cohere.ai/v1/chat";
-    const requestBody = { model: "command-r-plus", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: maxTokens };
+    const requestBody = { model: "command-r-plus-08-2024", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: maxTokens };
     const response = await fetch(COHERE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` }, body: JSON.stringify(requestBody) });
     if (!response.ok) throw new Error(`Cohere API responded with status: ${response.status}`);
     return await response.json();

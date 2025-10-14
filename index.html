@@ -851,12 +851,12 @@ const formattedText = msg.text.replace(urlRegex, '<a href="$1" target="_blank" s
         // Ek unique ID banayi taake hum is message ko pehchan sakein
         const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         
-        const urlRegex = /(https?:\/\/[^\s"<>]+)/g;
-const formattedText = msg.text.replace(urlRegex, '<a href="$1" target="_blank" style="color: #53bdeb; text-decoration: underline;">$1</a>').replace(/\n/g, '<br>');
+         // PURANI LINES (AI KE LIYE)
+const formattedText = msg.text.replace(/\n/g, '<br>');
 // Message ke text wale div ko woh unique ID de di
 contentHTML += `<div class="msg-text" id="${messageId}">${formattedText}</div>`;
-        
-        }
+    
+    }
         contentHTML += '</div>';
 
         // 3. Speaker aur Copy buttons ka HTML banaya (YEH POORA HISSA NAYA HAI)

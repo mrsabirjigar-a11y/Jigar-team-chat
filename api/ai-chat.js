@@ -3,11 +3,15 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const fs = require('fs');
-const { getSystemPrompt } = require('./system_prompts');
+const path = require('path'); // YEH NAYI, JADUI LINE HAI
 
-// === FIREBASE & KNOWLEDGE BASE INITIALIZATION ===
+// Nayi Tabdeeli: Ab hum getSystemPrompt ko uske poore address se bulayenge
+const { getSystemPrompt } = require(path.join(__dirname, 'system_prompts.js'));
+
+// === FIREBASE & KNOWLEDGE BASE INITIALIZATION (NAYA, BEHTAR TAREEKA) ===
 let knowledgeBase;
 try {
+    // Firebase ka setup waisa hi hai
     const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     admin.initializeApp({
@@ -16,9 +20,11 @@ try {
     });
     console.log("✅ Firebase Yaddasht (Memory) Connected!");
 
-    const knowledgeBasePath = './knowledge_base.json';
+    // Nayi Tabdeeli: Ab hum file ka poora, "dynamic" address nikalenge
+    const knowledgeBasePath = path.join(__dirname, 'knowledge_base.json');
     knowledgeBase = JSON.parse(fs.readFileSync(knowledgeBasePath, 'utf8'));
     console.log("✅ AI ka Dimaagh (Knowledge Base) Successfully Loaded!");
+
 } catch (error) {
     console.error("❌ Initialization FAILED:", error.message);
     process.exit(1); 

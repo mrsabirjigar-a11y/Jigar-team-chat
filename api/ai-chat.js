@@ -345,6 +345,9 @@ async function handleBusinessLogic(userData, userMessage, intent) {
 
 
 
+app.get('/', (req, res) => {
+    res.status(200).send('Jigar Team AI Agent is alive and healthy!');
+});
 
 // === MAIN LOGIC LOOP (v2.0 - FINAL, AQALMAND VERSION) ===
 app.post('/', async (req, res) => {

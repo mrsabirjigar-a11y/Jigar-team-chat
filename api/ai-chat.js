@@ -1,18 +1,25 @@
+// =================================================================
+// === JIGAR TEAM AI - RECRUITMENT AGENT v2.2 (100% DEPLOYMENT-READY) ===
+// =================================================================
+
 // === LIBRARIES ===
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const fs = require('fs');
-const path = require('path'); // YEH NAYI, JADUI LINE HAI
+const path = require('path');
 
-// Nayi Tabdeeli: Ab hum getSystemPrompt ko uske poore address se bulayenge
-const { getSystemPrompt } = require(path.join(__dirname, 'system_prompts.js'));
-
-// === FIREBASE & KNOWLEDGE BASE INITIALIZATION (NAYA, BEHTAR TAREEKA) ===
+// === INITIALIZATION (FINAL, ERROR-PROOF METHOD) ===
 let knowledgeBase;
+let getSystemPrompt;
+
 try {
-    // Firebase ka setup waisa hi hai
-    const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
+    // --- Step 1: Firebase Ko Connect Karo ---
+    // Pehle check karo ke secret file mojood hai ya nahi
+    const serviceAccountPath = '/etc/secrets/firebase_credentials.json';
+    if (!fs.existsSync(serviceAccountPath)) {
+        throw new Error('Firebase credentials file not found at ' + serviceAccountPath);
+    }
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
@@ -20,15 +27,27 @@ try {
     });
     console.log("✅ Firebase Yaddasht (Memory) Connected!");
 
-    // Nayi Tabdeeli: Ab hum file ka poora, "dynamic" address nikalenge
+    // --- Step 2: AI Ke Dimaagh (Knowledge Base) Ko Load Karo ---
     const knowledgeBasePath = path.join(__dirname, 'knowledge_base.json');
+    if (!fs.existsSync(knowledgeBasePath)) {
+        throw new Error('knowledge_base.json file not found in the same directory as ai-chat.js');
+    }
     knowledgeBase = JSON.parse(fs.readFileSync(knowledgeBasePath, 'utf8'));
     console.log("✅ AI ka Dimaagh (Knowledge Base) Successfully Loaded!");
+
+    // --- Step 3: AI Ki Rooh (System Prompts) Ko Load Karo ---
+    const promptsPath = path.join(__dirname, 'system_prompts.js');
+    if (!fs.existsSync(promptsPath)) {
+        throw new Error('system_prompts.js file not found in the same directory as ai-chat.js');
+    }
+    getSystemPrompt = require(promptsPath).getSystemPrompt;
+    console.log("✅ AI ki Rooh (System Prompts) Successfully Loaded!");
 
 } catch (error) {
     console.error("❌ Initialization FAILED:", error.message);
     process.exit(1); 
 }
+
 
 const db = admin.database();
 

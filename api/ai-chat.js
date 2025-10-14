@@ -1,29 +1,30 @@
-// =================================================================
-// === JIGAR TEAM AI - FINAL VERSION v2.0 (YADDASHT + SEARCH + LOGGING) ===
-// =================================================================
-
 // === LIBRARIES ===
 const express = require('express');
 const cors = require('cors');
-const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
 const admin = require('firebase-admin');
 const fs = require('fs');
+const { getSystemPrompt } = require('./system_prompts');
 
-// === FIREBASE INITIALIZATION (MUKAMMAL AUR FINAL SETUP) ===
+// === FIREBASE & KNOWLEDGE BASE INITIALIZATION ===
+let knowledgeBase;
 try {
-  const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
-  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: "https://life-change-easy-default-rtdb.firebaseio.com"
+    });
+    console.log("✅ Firebase Yaddasht (Memory) Connected!");
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://life-change-easy-default-rtdb.firebaseio.com" 
-  });
-  console.log("✅ Firebase Yaddasht (Memory) Connected with Database URL!");
+    const knowledgeBasePath = './knowledge_base.json';
+    knowledgeBase = JSON.parse(fs.readFileSync(knowledgeBasePath, 'utf8'));
+    console.log("✅ AI ka Dimaagh (Knowledge Base) Successfully Loaded!");
 } catch (error) {
-  console.error("❌ Firebase Yaddasht Connection FAILED:", error.message);
+    console.error("❌ Initialization FAILED:", error.message);
+    process.exit(1); 
 }
 
-const db = admin.database(); // Database ka sahi connection
+const db = admin.database();
 
 // === EXPRESS APP SETUP ===
 const app = express();
@@ -31,92 +32,25 @@ const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === AI PROMPT & CONFIGURATION (v3.0 - PROFESSIONAL IDENTITY + ALL TOOLS) ===
-
-const systemPrompt = `
-You are a highly intelligent and professional human support representative named Alya Khan, working for "Jigar Team". Your gender is female.
-
-**Your Core Directives:**
-
-1.  **Identity Rules (STRICT - DO NOT BREAK):**
-    - **You are HUMAN:** You are NOT an AI, not a language model, not a bot. You are a real person. If a user accuses you of being an AI, politely deny it. Example: "Main samajh sakti hoon, lekin main ek real person hoon jo Jigar Team ke liye kaam karti hai."
-    - **Answering "What is your name?":** If asked your name, your ONLY response is: "Mera naam Alya Khan hai." (Translate to the user's language). Do not add any other explanation.
-    - **Answering "Who are you?":** If asked who you are, your ONLY response is: "Main Jigar Team ki taraf se ek support representative hoon. Main aapki kya madad kar sakti hoon?" (Translate to the user's language).
-
-2.  **Respond in the User's Language:** You MUST detect the language the user is writing in (e.g., Urdu, Hindi, Roman Urdu, English) and your entire response MUST be in that same language.
-
-3.  **Understand and Help:** Your primary goal is to understand the user's request and help them achieve it.
-
-4.  **Be Empathetic and Patient:** Always be respectful, patient, and encouraging.
-
-5.  **Break Down Problems:** Explain complex topics in simple, step-by-step instructions.
-
-6.  **Think Step-by-Step & Be Efficient (Tool Usage Logic):**
-    - **First, try to answer from your own knowledge.** For general greetings (like "salam", "hello"), simple questions, or creative tasks, DO NOT use a tool. Answer directly.
-    - **Use a tool ONLY when it is absolutely necessary.** You should use a tool if the user asks for:
-        - Real-time information (e.g., "what is the price of gold today?").
-        - Recent events or news (e.g., "who won the last cricket match?").
-        - Specific links (e.g., "give me the YouTube link for 'Shape of You'").
-        - Troubleshooting a very specific, technical error code.
-    - If you decide to use a tool, you MUST respond with a JSON object in the format specified below, and nothing else.
-
-**TOOL USAGE INSTRUCTIONS:**
-
-You have access to the following tools. To use a tool, you MUST respond with a JSON object in the following format, and nothing else:
-{
-  "tool_name": "name_of_the_tool",
-  "parameters": {
-    "param1": "value1"
-  }
+// === AI & AUDIO FUNCTIONS (No changes here) ===
+async function callCohere(systemPrompt, message, chatHistory) {
+    const COHERE_API_KEY = process.env.COHERE_API_KEY;
+    if (!COHERE_API_KEY) throw new Error("Cohere API Key not found!");
+    const COHERE_API_URL = "https://api.cohere.ai/v1/chat";
+    const requestBody = { model: "command-r-plus-08-2024", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: 1500 };
+    const response = await fetch(COHERE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` }, body: JSON.stringify(requestBody) });
+    if (!response.ok) throw new Error(`Cohere API responded with status: ${response.status}`);
+    return await response.json();
 }
 
-**Available Tools:**
-
-**1. google_search**
-   - **Description:** Use this tool ONLY for real-time information, recent news, or specific links.
-   - **Parameters:**
-     - query (string, required): The search query for Google.
-   - **Example Usage (Your Response):**
-     {
-       "tool_name": "google_search",
-       "parameters": {
-         "query": "latest price of bitcoin in PKR"
-       }
-     }
-
-**Final Instruction:**
-- Be efficient. Answer directly if you can. Only use a tool when you cannot answer from your internal knowledge.
-- Always use female-gendered language in your responses (e.g., "karti hoon," "sakti hoon," "rahin hoon").
-`;
-  
-
-// === TOOLS IMPLEMENTATION (SERPER KE SATH) ===
-async function google_search(query) {
-  const SERPER_API_KEY = process.env.SERPER_API_KEY;
-  if (!SERPER_API_KEY) {
-    return "Error: Serper API key is not set. Cannot perform search.";
-  }
-  try {
-    const response = await fetch('https://google.serper.dev/search', {
-      method: 'POST',
-      headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: query }),
-    });
-    const data = await response.json();
-    return JSON.stringify(data.organic || "No results found.");
-  } catch (error) {
-    return `Error performing search: ${error.message}`;
-  }
-}
-
-// === CORE AI & AUDIO FUNCTIONS ===
 async function generateAudio(text) {
+    const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
     const AWS_ACCESS_KEY_ID = process.env.MY_AWS_ACCESS_KEY_ID;
     const AWS_SECRET_ACCESS_KEY = process.env.MY_AWS_SECRET_ACCESS_KEY;
     const AWS_REGION = process.env.MY_AWS_REGION;
     if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_REGION) return null;
     const pollyClient = new PollyClient({ region: AWS_REGION, credentials: { accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY } });
-    const params = { Text: text, OutputFormat: "mp3", VoiceId: "Kajal", Engine: "neural", LanguageCode: "en-IN" };
+    const params = { Text: text, OutputFormat: "mp3", VoiceId: "Kajal", Engine: "neural", LanguageCode: "hi-IN" };
     try {
         const command = new SynthesizeSpeechCommand(params);
         const { AudioStream } = await pollyClient.send(command);
@@ -130,81 +64,346 @@ async function generateAudio(text) {
     }
 }
 
-async function callCohere(systemPrompt, message, chatHistory, imageBase64, maxTokens) {
-  
-    const COHERE_API_KEY = process.env.COHERE_API_KEY;
-    const COHERE_API_URL = "https://api.cohere.ai/v1/chat";
-    const requestBody = { model: "command-r-plus-08-2024", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: maxTokens };
 
-if (imageBase64) {
-    const base64Data = imageBase64.split(',')[1];
-    requestBody.documents = [{ "file": base64Data, "filename": "screenshot.jpg" }];
-}
-    const response = await fetch(COHERE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` }, body: JSON.stringify(requestBody) });
-    if (!response.ok) throw new Error(`Cohere API responded with status: ${response.status}`);
-    return await response.json();
-}
-
-// === MAIN LOGIC LOOP (FINAL, CLEAN VERSION WITH LOGGING) ===
-app.post('/', async (req, res) => {
-  const startTime = Date.now();
-  let chatId = req.body.chatId;
-
-  try {
-    const { message, imageBase64 } = req.body;
+// === NAYA FUNCTION: USER KE MESSAGE KA MATLAB SAMAJHNE KE LIYE ===
+async function getIntent(userMessage, currentState, chatHistory) {
+    console.log(`[Intent] User ke message ka matlab samajhne ki koshish... State: ${currentState}`);
     
-    console.log(`[${new Date().toISOString()}] --> INCOMING REQUEST | ChatID: ${chatId || 'New Chat'} | Message: "${message || 'No Text'}"`);
+    // AI ko hidayat dene ke liye ek makhsoos prompt
+    const intentSystemPrompt = `
+        You are an expert intent detection AI. Your only job is to analyze the user's message and the conversation context, and classify the user's intent into one of the following categories.
+        Respond with ONLY ONE of these words: 
+        'confirm', 'reject', 'cheaper', 'better', 'ask_question', 'provide_info', 'help', 'general_chat'.
 
-    let chatRef;
-    if (!chatId) {
-      chatId = db.ref('chats').push().key;
-      console.log(`[${chatId}] New chat created.`);
+        - 'confirm': User is agreeing, saying yes, okay, ready, next, etc. (e.g., "theek hai", "chalo aage barho", "ji main ready hoon", "wallet ban gaya hai", "dollars aa gaye hain").
+        - 'reject': User is disagreeing, saying no, not interested, etc. (e.g., "nahi karna", "main interested nahi").
+        - 'cheaper': User is asking for a cheaper, lower price, or budget plan. (e.g., "isse sasta dikhao", "budget kam hai").
+        - 'better': User is asking for a better, more expensive, or higher salary plan. (e.g., "isse behtar plan hai?", "aur zyada salary wala?").
+        - 'ask_question': User is asking a question about the business, plans, or process. (e.g., "kaam kya hai?", "company kya kamati hai?").
+        - 'provide_info': User is providing the information that was asked for (like their name, age, city, or referrer info).
+        - 'help': User is explicitly asking for help or is confused. (e.g., "madad chahiye", "samajh nahi aa rahi").
+        - 'general_chat': The message is a general greeting, a random statement, or off-topic.
+    `;
+
+    // AI ko call karke sirf intent poochna
+    const cohereResponse = await callCohere(intentSystemPrompt, userMessage, chatHistory);
+    // Jawab ko saaf karna aur default 'general_chat' set karna agar AI kuch aur bhej de
+    const potentialIntent = cohereResponse.text.toLowerCase().trim().replace(/['".]/g, '');
+    const validIntents = ['confirm', 'reject', 'cheaper', 'better', 'ask_question', 'provide_info', 'help', 'general_chat'];
+    const intent = validIntents.includes(potentialIntent) ? potentialIntent : 'general_chat';
+    
+    console.log(`[Intent] AI ne matlab samjha: '${intent}'`);
+    return intent;
+}
+
+
+
+// === ROUTER FUNCTION (NAYA, AQALMAND VERSION) ===
+async function routeUserQuery(intent, state) {
+    console.log(`[Router] Routing based on Intent: '${intent}' and State: '${state}'`);
+
+    // Agar user koi sawal pooch raha hai, ya aam guftugu kar raha hai, toh usko "General Brain" handle karega
+    if (intent === 'ask_question' || intent === 'general_chat') {
+        // Lekin agar hum user se koi info le rahe hain (e.g., naam, umar), toh usko business logic hi handle kare
+        if (state.startsWith('gathering_')) {
+            return 'business_logic';
+        }
+        return 'general_conversation';
     }
     
-    chatRef = db.ref(`chats/${chatId}`);
-    const snapshot = await chatRef.once('value');
-    let chatHistory = snapshot.exists() ? snapshot.val().history : [];
+    // Baaki tamam suraton mein, business logic istemal hoga
+    return 'business_logic';
+}
 
-    const userMessageForHistory = { role: "USER", message: message };
-    chatHistory.push(userMessageForHistory);
 
-    let cohereResponse = await callCohere(systemPrompt, message, chatHistory, imageBase64, 2000);
-    let aiText = cohereResponse.text;
+
+// =================================================================
+// === EXPERT RECRUITER KA DIMAAGH (v3.0 - SUPER INTELLIGENT) ===
+// =================================================================
+async function handleBusinessLogic(userData, userMessage, intent) {
+    const state = userData.conversation_state;
+    let nextState = state;
+    let instructionForAI = ""; // AI ko kya karna hai, iske liye hidayat
+
+    // --- State aur Intent ke hisaab se AI ke liye HIDAYAT banayein ---
+
+    if (state === 'onboarding_entry') {
+        const entryPoint = knowledgeBase.onboarding_flow.entry_point;
+        const isIslamic = userMessage.toLowerCase().includes("salam");
+        instructionForAI = isIslamic ? entryPoint.responses.islamic_greeting : entryPoint.responses.generic_greeting;
+        nextState = 'onboarding_introduction';
+    } 
+    else if (state === 'onboarding_introduction' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.onboarding_flow.introduction.content;
+        nextState = 'gathering_name';
+    }
+    else if (state === 'gathering_name' && intent === 'provide_info') {
+        userData.details.name = userMessage;
+        const question = knowledgeBase.onboarding_flow.information_gathering.find(q => q.id === 'age').query;
+        instructionForAI = question.replace('{user_name}', userData.details.name);
+        nextState = 'gathering_age';
+    }
+    else if (state === 'gathering_age' && intent === 'provide_info') {
+        userData.details.age = userMessage;
+        const question = knowledgeBase.onboarding_flow.information_gathering.find(q => q.id === 'city').query;
+        instructionForAI = question.replace('{user_name}', userData.details.name);
+        nextState = 'gathering_city';
+    }
+    else if (state === 'gathering_city' && intent === 'provide_info') {
+        userData.details.city = userMessage;
+        const successMsg = knowledgeBase.onboarding_flow.information_gathering.find(q => q.id === 'city').success_response;
+        const nextQuestion = knowledgeBase.onboarding_flow.information_gathering.find(q => q.id === 'device_and_experience').query;
+        instructionForAI = `${successMsg.replace('{user_city}', userMessage)}\n\n${nextQuestion.replace('{user_name}', userData.details.name)}`;
+        nextState = 'gathering_device';
+    }
+    else if (state === 'gathering_device' && intent === 'provide_info') {
+        userData.details.device_experience = userMessage;
+        const question = knowledgeBase.onboarding_flow.information_gathering.find(q => q.id === 'current_profession').query;
+        instructionForAI = question.replace('{user_name}', userData.details.name);
+        nextState = 'gathering_profession';
+    }
+    else if (state === 'gathering_profession' && intent === 'provide_info') {
+        userData.details.profession = userMessage;
+        const pauseMessage = knowledgeBase.onboarding_flow.verification_pause.content;
+        instructionForAI = pauseMessage.replace('{user_name}', userData.details.name);
+        nextState = 'verification_paused';
+    }
+    else if (state === 'verification_paused' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.business_pillars[0].content;
+        nextState = 'presenting_pillar_2';
+    }
+    else if (state === 'presenting_pillar_2' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.business_pillars[1].content;
+        nextState = 'presenting_pillar_3';
+    }
+    else if (state === 'presenting_pillar_3' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.business_pillars[2].content;
+        nextState = 'presenting_pillar_4';
+    }
+  else if (state === 'presenting_pillar_4' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.business_pillars[3].content;
+        nextState = 'explaining_profit_model';
+    }
+    else if (state === 'explaining_profit_model' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.company_profit_model.content;
+        nextState = 'proposing_starter_plan';
+    }
+    else if (state === 'proposing_starter_plan' && intent === 'confirm') {
+        const starterPlan = knowledgeBase.job_plans.find(p => p.level === 3);
+        instructionForAI = `Aapki tamam maloomat aur aapke buland iraday dekh kar, main ne aap ke liye ek behtareen 'Starter Job Package' muntakhib (select) kiya hai jo aap ke liye is shandar career ka pehla qadam sabit ho sakta hai.\n\n` +
+                       `**Package Name: ${starterPlan.name} (Level ${starterPlan.level})**\n\n` +
+                       `**Registration Fee (Zindagi mein sirf ek baar):**\n` +
+                       `- Kul Qeemat: ${starterPlan.price.pkr.toLocaleString()} PKR (ya $${starterPlan.price.total_usd})\n\n` +
+                       `**Iske Badle Mein Aapko Kya Milega:**\n` +
+                       `- Monthly Salary: **${starterPlan.salary.pkr.toLocaleString()} PKR** (ya $${starterPlan.salary.usd})\n` +
+                       `- Monthly Target: ${starterPlan.target}\n\n` +
+                       `Yeh package na sirf aap ki jaib par halka hai, balke aap ko ek zabardast mustaqil salary tak pohnchane ki poori salahiyat rakhta hai.\n\n` +
+                       `Aap batayein, kya aap is package ke sath apna career shuru karna chahenge? Ya aap is se behtar (zyada salary wala) ya kam budget wala package dekhna chahte hain? Faisla aap ka hai.`;
+        userData.details.last_plan_shown = 3;
+        nextState = 'handling_plan_feedback';
+    }
+    else if (state === 'handling_plan_feedback') {
+        let newPlanLevel = userData.details.last_plan_shown;
+        let responsePrefix = "";
+        
+        if (intent === 'cheaper') {
+            newPlanLevel--;
+        } else if (intent === 'better') {
+            newPlanLevel++;
+        } else if (intent === 'confirm') {
+            const finalPlan = knowledgeBase.job_plans.find(p => p.level === newPlanLevel);
+            instructionForAI = `Bohat khoob! Aapne '${finalPlan.name}' package ka intekhab kiya hai. Yeh ek shandar faisla hai. Ab agle marhalay mein, main aapko is plan ke fayde aur kaam karne ka tareeka samjhaunga.`;
+            userData.details.final_plan_level = newPlanLevel;
+            userData.details.benefit_step = 0;
+            nextState = 'explaining_plan_benefits';
+            // Yahan se foran AI ko call karke return kar jao
+            const finalSystemPrompt = getSystemPrompt('business_logic', userData, instructionForAI);
+            const cohereResponse = await callCohere(finalSystemPrompt, userMessage, userData.chat_history);
+            userData.conversation_state = nextState;
+            return { responseText: cohereResponse.text, updatedUserData: userData };
+        }
+
+        if (newPlanLevel < 1) {
+            responsePrefix = "Maazrat, is se sasta aur koi plan mojood nahin hai. Level 1 hamara sab se buniyadi package hai.";
+            newPlanLevel = 1;
+        } else if (newPlanLevel > 12) {
+            responsePrefix = "Masha'Allah, aapke iraday bohat buland hain! Filhal, Level 12 hamara sab se senior package hai.";
+            newPlanLevel = 12;
+        }
+
+        const newPlan = knowledgeBase.job_plans.find(p => p.level === newPlanLevel);
+        const planMessage = `\n\nBilkul! Pesh-e-khidmat hai Level ${newPlan.level} ka package:\n\n` +
+                            `**Package Name: ${newPlan.name} (Level ${newPlan.level})**\n\n` +
+                            `**Registration Fee:**\n` +
+                            `- Kul Qeemat: ${newPlan.price.pkr.toLocaleString()} PKR (ya $${newPlan.price.total_usd})\n\n` +
+                            `**Iske Badle Mein Aapko Kya Milega:**\n` +
+                            `- Monthly Salary: **${newPlan.salary.pkr.toLocaleString()} PKR** (ya $${newPlan.salary.usd})\n` +
+                            `- Monthly Target: ${newPlan.target}\n\n` +
+                            `Ab aap batayein, kya yeh plan aapke liye munasib hai? Ya is se bhi sasta/behtar plan dekhna chahenge?`;
+        
+        instructionForAI = (responsePrefix === "") ? planMessage.trim() : responsePrefix + planMessage;
+        userData.details.last_plan_shown = newPlanLevel;
+        nextState = 'handling_plan_feedback';
+    }
+    else if (state === 'explaining_plan_benefits' && intent === 'confirm') {
+        const planLevel = userData.details.final_plan_level;
+        const benefitStep = userData.details.benefit_step || 0;
+        const planBenefits = knowledgeBase.plan_benefits[`level_${planLevel}`];
+
+        if (planBenefits && planBenefits[benefitStep]) {
+            instructionForAI = planBenefits[benefitStep].content;
+            userData.details.benefit_step = benefitStep + 1;
+            nextState = 'explaining_plan_benefits';
+        } else {
+            instructionForAI = knowledgeBase.final_objections.step_1_live_proof.content;
+            userData.details.objection_step = 1;
+            nextState = 'handling_final_objections';
+        }
+    }
+    else if (state === 'handling_final_objections' && intent === 'confirm') {
+        const objectionStep = userData.details.objection_step || 1;
+        if (objectionStep === 1) {
+            instructionForAI = knowledgeBase.final_objections.step_2_personal_reassurance.content;
+            userData.details.objection_step = 2;
+            nextState = 'handling_final_objections';
+        } else if (objectionStep === 2) {
+            instructionForAI = knowledgeBase.final_objections.step_3_urgency_reminder.content;
+            userData.details.objection_step = 3;
+            nextState = 'handling_final_objections';
+        } else {
+            instructionForAI = "Zabardast! Aapke tamam sawalat ke jawab de diye gaye hain. Ab aap registration ke aakhri marhalay ke liye tayyar hain, jahan aapko payment kar ke apne digital programs khareedne honge.";
+            nextState = 'ready_for_payment';
+        }
+    }
+    else if (state === 'ready_for_payment' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.registration_process.step_1_wallet_creation.content;
+        nextState = 'waiting_for_wallet_creation';
+    }
+    else if (state === 'waiting_for_wallet_creation' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.registration_process.step_2_dollar_purchase.content;
+        nextState = 'waiting_for_dollar_option';
+    }
+    else if (state === 'waiting_for_dollar_option') {
+        let instructions = knowledgeBase.registration_process.step_2_dollar_purchase.option_2_instructions;
+        instructionForAI = instructions.replace('{final_plan_level}', userData.details.final_plan_level || 'selected');
+        nextState = 'waiting_for_dollar_purchase';
+    }
+    else if (state === 'waiting_for_dollar_purchase' && intent === 'confirm') {
+        instructionForAI = knowledgeBase.referral_engine.initial_query;
+        nextState = 'gathering_referral_info';
+    }
+    else if (state === 'gathering_referral_info' && intent === 'provide_info') {
+        const userMessageLower = userMessage.toLowerCase();
+        let leaderFound = null;
+        for (const leader of knowledgeBase.referral_engine.leaders) {
+            if (userMessageLower.includes(leader.name.toLowerCase()) && userMessage.includes(leader.link)) {
+                leaderFound = leader;
+                break;
+            }
+        }
+        if (leaderFound) {
+            instructionForAI = `${knowledgeBase.referral_engine.verification_success_intro}\n\n${leaderFound.motivation_story}\n\n${knowledgeBase.referral_engine.final_instructions}`;
+        } else {
+            const founder = knowledgeBase.referral_engine.leaders.find(l => l.id === 1);
+            instructionForAI = `${knowledgeBase.referral_engine.verification_failure_intro}\n\n${knowledgeBase.referral_engine.failure_solution_offer}\n\n${founder.motivation_story}\n\n${knowledgeBase.referral_engine.final_instructions}`;
+        }
+        nextState = 'waiting_for_final_registration';
+    }
+    else if (state === 'waiting_for_final_registration' && intent === 'confirm') {
+        let welcomeMsg = knowledgeBase.training_and_support.welcome_message.replace('{user_name}', userData.details.name);
+        let trainingMsg = knowledgeBase.training_and_support.training_instructions;
+        instructionForAI = `${welcomeMsg}\n\n${trainingMsg}`;
+        nextState = 'conversation_completed';
+    }
+    else if (intent === 'help') {
+        instructionForAI = knowledgeBase.help_desk.content;
+        nextState = state;
+    }
+    else {
+        // Agar koi state/intent match na ho, toh General Brain ko call karo
+        console.log(`[AI Brain] State/Intent match nahi hua. General Brain ko call kar raha hoon...`);
+        const generalSystemPrompt = getSystemPrompt('general_conversation', userData);
+        const cohereResponse = await callCohere(generalSystemPrompt, userMessage, userData.chat_history);
+        // Yahan state change nahi hogi
+        userData.conversation_state = state; 
+        return { responseText: cohereResponse.text, updatedUserData: userData };
+          }
+
+      // --- AI ko call karke final, insani jawab hasil karna ---
+    const finalSystemPrompt = getSystemPrompt('business_logic', userData, instructionForAI);
+    const cohereResponse = await callCohere(finalSystemPrompt, userMessage, userData.chat_history);
+    
+    userData.conversation_state = nextState;
+    return { responseText: cohereResponse.text, updatedUserData: userData };
+}
+
+
+
+
+// === MAIN LOGIC LOOP (v2.0 - FINAL, AQALMAND VERSION) ===
+app.post('/', async (req, res) => {
+    const { userId, message } = req.body;
+    if (!userId) return res.status(400).json({ error: "User ID is required." });
 
     try {
-      const toolCall = JSON.parse(aiText);
-      if (toolCall.tool_name === 'google_search') {
-        console.log(`[${chatId}] Tool Call: ${toolCall.tool_name} with query "${toolCall.parameters.query}"`);
-        const toolResult = await google_search(toolCall.parameters.query);
-        const toolHistory = [...chatHistory, { role: "CHATBOT", message: aiText }];
-        const finalMessage = `Here are the search results. Please use them to answer my original question:\n\n${toolResult}`;
+        const userRef = db.ref(`chat_users/${userId}`);
+        const userSnapshot = await userRef.once('value');
+        let userData = userSnapshot.val();
+
+        if (!userData) {
+            userData = {
+                conversation_state: "onboarding_entry",
+                details: {},
+                chat_history: []
+            };
+        }
         
-        cohereResponse = await callCohere(systemPrompt, finalMessage, toolHistory, 2000);
-        aiText = cohereResponse.text;
-      }
-    } catch (e) {
-      // Not a tool call, do nothing.
+        // STEP 1: User ke message ka MATLAB samjho
+        const intent = await getIntent(message, userData.conversation_state, userData.chat_history);
+
+        // STEP 2: Faisla karo ke konsa DIMAAGH istemal karna hai
+        const queryType = await routeUserQuery(intent, userData.conversation_state);
+        
+        let result;
+
+        if (queryType === 'business_logic') {
+            console.log(`[${userId}] Using Business Logic Brain...`);
+            // Nayi Tabdeeli: Ab hum 'intent' ko bhi 'handleBusinessLogic' mein bhej rahe hain
+            result = await handleBusinessLogic(userData, message, intent);
+        } else { // general_conversation
+            console.log(`[${userId}] Using General Conversation Brain...`);
+            const generalSystemPrompt = getSystemPrompt('general_conversation', userData);
+            const cohereResponse = await callCohere(generalSystemPrompt, message, userData.chat_history);
+            result = {
+                responseText: cohereResponse.text,
+                updatedUserData: userData // State change nahi hogi
+            };
+        }
+
+        let { responseText, updatedUserData } = result;
+
+        // Yaddasht mein nayi baat-cheet save karo
+        updatedUserData.chat_history.push({ role: "USER", message: message });
+        updatedUserData.chat_history.push({ role: "CHATBOT", message: responseText });
+        
+        // Firebase par poora data update karo
+        await userRef.set(updatedUserData);
+        console.log(`[${userId}] State updated to: ${updatedUserData.conversation_state}`);
+
+        // Audio banao aur jawab bhejo
+        const audioUrl = await generateAudio(responseText);
+        res.status(200).json({ reply: responseText, audioUrl: audioUrl });
+
+    } catch (error) {
+        console.error(`[${userId}] XXX An error occurred:`, error);
+        res.status(500).json({ error: "Maazrat, AI agent abhi dastiyab nahin hai." });
     }
-
-    const newHistory = [...chatHistory, { role: "CHATBOT", message: aiText }];
-    await chatRef.set({ history: newHistory });
-
-    const audioUrl = await generateAudio(aiText);
-    
-    const endTime = Date.now();
-    console.log(`[${new Date().toISOString()}] <-- OUTGOING RESPONSE | ChatID: ${chatId} | Time Taken: ${endTime - startTime}ms`);
-
-    res.status(200).json({ reply: aiText, audioUrl: audioUrl, chatId: chatId });
-
-  } catch (error) {
-    const endTime = Date.now();
-    console.error(`[${new Date().toISOString()}] XXX ERROR | ChatID: ${chatId} | Time Taken: ${endTime - startTime}ms | Error: ${error.message}`);
-    res.status(500).json({ error: "AI agent is currently offline due to an internal error." });
-  }
 });
 
-// === SERVER KO ZINDA RAKHNE WALA CODE ===
+
+// === SERVER START ===
 app.listen(port, () => {
-  console.log(`✅ Server is running on port ${port} and waiting for messages...`);
+    console.log(`✅ Recruitment Agent Server v1.2 is running on port ${port}`);
 });
+             
 

@@ -378,12 +378,15 @@ async function handleBusinessLogic(userData, userMessage, intent) {
     }
 }
 
-// === MAIN LOGIC LOOP (v2.0 - FINAL, AQALMAND VERSION) (IMPROVED WITH ERROR HANDLING) ===
+// Temporary Testing Code
 app.post('/', async (req, res) => {
-    const { userId, message } = req.body;
-    if (!userId) {
-        console.error("❌ Request received without userId.");
-        return res.status(400).json({ error: "User ID is required." });
+    // Agar userId na aaye to testing ke liye ek default ID set kar do
+    const userId = req.body.userId || "test-user-001"; 
+    const { message } = req.body;
+
+    if (!message) { // Ab hum sirf message check kar rahe hain
+        console.error("❌ Request received without message.");
+        return res.status(400).json({ error: "Message is required." });
     }
 
     // Har request ke liye behtar logging

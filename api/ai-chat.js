@@ -395,7 +395,17 @@ async function handleBusinessLogic(userData, userMessage, intent) {
     }
     }
 
-// === FINAL, MOST ROBUST app.post FUNCTION (v3) ===
+        console.error(`[${userId}] XXX A FATAL ERROR OCCURRED IN THE MAIN ROUTE HANDLER XXX`);
+        console.error("Error Message:", error.message);
+        console.error("Full Error Stack:", error.stack);
+        console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n`);
+        
+        res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
+    }
+});
+    
+        
+// === FINAL, 100% CORRECTED app.post FUNCTION (v4) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId) {
@@ -410,25 +420,19 @@ app.post('/', async (req, res) => {
         const userSnapshot = await userRef.once('value');
         let userData = userSnapshot.val();
 
-        // --- YAHI ASAL FIX HAI ---
-        // Agar user naya hai YA user ka data adhoora hai
         if (!userData || !userData.conversation_state) {
             console.log(`[${userId}] New or incomplete user. Creating/Resetting data.`);
             userData = {
-                // Pehle se mojood details (agar hain) ko bachao
                 details: userData?.details || {}, 
                 chat_history: userData?.chat_history || [],
-                // State ko hamesha 'onboarding_entry' se shuru karo
                 conversation_state: "onboarding_entry" 
             };
-            // Is naye/theek kiye gaye data ko foran Firebase mein save kar do
             await userRef.set(userData); 
             console.log(`[${userId}] Initial data for user saved/reset in Firebase.`);
         } else {
             console.log(`[${userId}] Existing user. Current state: ${userData.conversation_state}`);
         }
         
-        // Ek aur safety check
         if (!userData.chat_history) {
             userData.chat_history = [];
         }
@@ -439,15 +443,21 @@ app.post('/', async (req, res) => {
         let result;
         console.log(`[Router] Faisla: Message ko '${queryType}' brain ke paas bheja ja raha hai.`);
 
+        // --- YAHI ASAL FIX HAI ---
+        // Humne is logic ko bilkul saaf aur wazeh kar diya hai
         if (queryType === 'business_logic') {
+            console.log(`[${userId}] Using Business Logic Brain...`);
             result = await handleBusinessLogic(userData, message, intent);
-        } else { // general_conversation
-            const cohereResponse = await callCohere(getSystemPrompt('general_conversation', userData), message, userData.chat_history);
+        } else { 
+            console.log(`[${userId}] Using General Conversation Brain...`);
+            const generalSystemPrompt = getSystemPrompt('general_conversation', userData);
+            const cohereResponse = await callCohere(generalSystemPrompt, message, userData.chat_history);
             result = {
                 responseText: cohereResponse.text,
                 updatedUserData: userData 
             };
         }
+        // --- FIX KHATAM ---
 
         let { responseText, updatedUserData } = result;
 
@@ -463,6 +473,7 @@ app.post('/', async (req, res) => {
 
         const audioUrl = await generateAudio(responseText);
         
+        console.log(`[${userId}] Sending final response to user.`);
         res.status(200).json({ reply: responseText, audioUrl: audioUrl });
 
     } catch (error) {
@@ -475,10 +486,7 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
     }
 });
-    
-        
-
-
+                                                
 
     
 

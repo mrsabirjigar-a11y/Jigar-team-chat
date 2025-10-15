@@ -174,6 +174,11 @@ async function handleBusinessLogic(userData, userMessage, intent) {
         let nextState = state;
         let instructionForAI = ""; 
 
+        // --- YEH 2 NAYI LINES ADD KAREIN ---
+        console.log("<<<<< BUSINESS LOGIC TEST >>>>>");
+        console.log("Knowledge Base se pehla greeting:", knowledgeBase.onboarding_flow.entry_point.responses.islamic_greeting);
+        // --- TEST LINES KHATAM ---
+
         // Dono logging lines yahan hain
         console.log(`[handleBusinessLogic] Current State: ${state}, Intent: ${intent}`);
         console.log(`[handleBusinessLogic] Knowledge Base se state '${state}' ka data dhoond raha hoon...`);

@@ -385,11 +385,8 @@ async function handleBusinessLogic(userData, userMessage, intent) {
         throw error;
     }
     }
-        
 
-
-
-// === FINAL, MOST ROBUST app.post FUNCTION ===
+// === FINAL, MOST ROBUST app.post FUNCTION (v3) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId) {
@@ -400,28 +397,30 @@ app.post('/', async (req, res) => {
     console.log(`\n--- [${userId}] New Request --- Message: "${message}" ---`);
 
     try {
-        console.log(`[${userId}] Fetching user data from Firebase...`);
         const userRef = db.ref(`chat_users/${userId}`);
         const userSnapshot = await userRef.once('value');
         let userData = userSnapshot.val();
 
-        if (!userData) {
-            console.log(`[${userId}] New user. Creating initial data.`);
+        // --- YAHI ASAL FIX HAI ---
+        // Agar user naya hai YA user ka data adhoora hai
+        if (!userData || !userData.conversation_state) {
+            console.log(`[${userId}] New or incomplete user. Creating/Resetting data.`);
             userData = {
-                conversation_state: "onboarding_entry",
-                details: {},
-                chat_history: [] // Yahan chat_history banayi ja rahi hai
+                // Pehle se mojood details (agar hain) ko bachao
+                details: userData?.details || {}, 
+                chat_history: userData?.chat_history || [],
+                // State ko hamesha 'onboarding_entry' se shuru karo
+                conversation_state: "onboarding_entry" 
             };
+            // Is naye/theek kiye gaye data ko foran Firebase mein save kar do
             await userRef.set(userData); 
-            console.log(`[${userId}] Initial data for new user saved to Firebase.`);
+            console.log(`[${userId}] Initial data for user saved/reset in Firebase.`);
         } else {
             console.log(`[${userId}] Existing user. Current state: ${userData.conversation_state}`);
         }
         
-        // YEH NAYI SAFETY CHECK HAI
-        // Agar kisi wajah se purane user ka chat_history nahi hai, to bana do
+        // Ek aur safety check
         if (!userData.chat_history) {
-            console.warn(`[${userId}] chat_history was missing. Initializing it now.`);
             userData.chat_history = [];
         }
 
@@ -429,12 +428,11 @@ app.post('/', async (req, res) => {
         const queryType = await routeUserQuery(intent, userData.conversation_state);
         
         let result;
+        console.log(`[Router] Faisla: Message ko '${queryType}' brain ke paas bheja ja raha hai.`);
 
         if (queryType === 'business_logic') {
-            console.log(`[${userId}] Using Business Logic Brain...`);
             result = await handleBusinessLogic(userData, message, intent);
         } else { // general_conversation
-            console.log(`[${userId}] Using General Conversation Brain...`);
             const cohereResponse = await callCohere(getSystemPrompt('general_conversation', userData), message, userData.chat_history);
             result = {
                 responseText: cohereResponse.text,
@@ -444,14 +442,10 @@ app.post('/', async (req, res) => {
 
         let { responseText, updatedUserData } = result;
 
-        // YEH DUSRI SAFETY CHECK HAI
-        // Response aane ke baad bhi check karo ke chat_history mojood hai
         if (!updatedUserData.chat_history) {
-            console.warn(`[${userId}] chat_history was missing in updatedUserData. Re-initializing.`);
             updatedUserData.chat_history = [];
         }
 
-        console.log(`[${userId}] Saving conversation to history...`);
         updatedUserData.chat_history.push({ role: "USER", message: message });
         updatedUserData.chat_history.push({ role: "CHATBOT", message: responseText });
         
@@ -460,7 +454,6 @@ app.post('/', async (req, res) => {
 
         const audioUrl = await generateAudio(responseText);
         
-        console.log(`[${userId}] Sending final response to user.`);
         res.status(200).json({ reply: responseText, audioUrl: audioUrl });
 
     } catch (error) {
@@ -473,6 +466,12 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
     }
 });
+    
+        
+
+
+
+    
 
             
 

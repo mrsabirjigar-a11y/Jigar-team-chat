@@ -378,16 +378,14 @@ async function handleBusinessLogic(userData, userMessage, intent) {
     }
 }
 
-// Temporary Testing Code
+// ORIGINAL, STRICT CODE (Isko wapas lagana hai)
 app.post('/', async (req, res) => {
-    // Agar userId na aaye to testing ke liye ek default ID set kar do
-    const userId = req.body.userId || "test-user-001"; 
-    const { message } = req.body;
-
-    if (!message) { // Ab hum sirf message check kar rahe hain
-        console.error("❌ Request received without message.");
-        return res.status(400).json({ error: "Message is required." });
+    const { userId, message } = req.body;
+    if (!userId) {
+        console.error("❌ Request received without userId.");
+        return res.status(400).json({ error: "User ID is required." });
     }
+    
 
     // Har request ke liye behtar logging
     console.log(`\n--- [${userId}] New Request --- Message: "${message}" ---`);

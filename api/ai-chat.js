@@ -190,7 +190,7 @@ async function handleBusinessLogic(userData, userMessage, intent) {
             instructionForAI = isIslamic ? entryPoint.responses.islamic_greeting : entryPoint.responses.generic_greeting;
             nextState = 'onboarding_introduction';
         } 
-        else if (state === 'onboarding_introduction' && intent === 'confirm') {
+        else if (state === 'onboarding_introduction') {
             instructionForAI = knowledgeBase.onboarding_flow.introduction.content;
             nextState = 'gathering_name';
         }

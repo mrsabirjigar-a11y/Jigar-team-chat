@@ -398,8 +398,7 @@ async function handleBusinessLogic(userData, userMessage, intent) {
 
         
     
-        
-// === FINAL, MOST INTELLIGENT app.post FUNCTION (v5) ===
+   // === FINAL, MOST INTELLIGENT app.post FUNCTION (v5) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId) {
@@ -415,7 +414,7 @@ app.post('/', async (req, res) => {
         let userData = userSnapshot.val();
 
         let isNewUser = false; // Ek flag banaya
-        if (!userData || !userData.conversation_state) {
+        if (!userData || !userData.conversation_state || userData.conversation_state === 'onboarding_entry') {
             console.log(`[${userId}] New or incomplete user. Creating/Resetting data.`);
             isNewUser = true; // Flag ko set kiya
             userData = {
@@ -423,8 +422,7 @@ app.post('/', async (req, res) => {
                 chat_history: userData?.chat_history || [],
                 conversation_state: "onboarding_entry" 
             };
-            await userRef.set(userData); 
-            console.log(`[${userId}] Initial data for user saved/reset in Firebase.`);
+            // Firebase mein save karne ki zaroorat nahi, yeh aage ho jayega
         } else {
             console.log(`[${userId}] Existing user. Current state: ${userData.conversation_state}`);
         }
@@ -437,14 +435,17 @@ app.post('/', async (req, res) => {
         let queryType;
         let intent;
 
-        // Agar user bilkul naya hai, to AI se intent poochne ki zaroorat hi nahi!
+        // Agar user bilkul naya hai YA woh abhi bhi pehli state par hai,
+        // to AI se intent poochne ki zaroorat hi nahi!
         // Zabardasti usay 'business_logic' mein bhejo.
         if (isNewUser) {
-            console.log(`[Router] User is brand new. Forcing 'business_logic'.`);
+            console.log(`[Router] User is brand new or at entry point. Forcing 'business_logic'.`);
             queryType = 'business_logic';
-            intent = 'confirm'; // Hum farz kar lete hain ke usne confirm kiya hai
+            // Hum farz kar lete hain ke usne confirm kiya hai taake script aage barhe
+            intent = 'confirm'; 
         } else {
             // Agar purana user hai, tab AI se intent poocho
+            console.log(`[Router] Existing user. Asking AI for intent.`);
             intent = await getIntent(message, userData.conversation_state, userData.chat_history);
             queryType = await routeUserQuery(intent, userData.conversation_state);
         }
@@ -493,9 +494,7 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
     }
 });
-    
-    
-
+            
             
 
 // === SERVER START ===

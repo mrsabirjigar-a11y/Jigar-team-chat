@@ -130,13 +130,16 @@ async function getIntent(userMessage, currentState, chatHistory) {
     }
 }
 
-// === ROUTER FUNCTION (NAYA, AQALMAND VERSION) ===
-// Yeh function simple hai, is mein error ke chance kam hain, isliye sirf logging behtar ki hai.
+// CORRECTED routeUserQuery FUNCTION
 async function routeUserQuery(intent, state) {
-    console.log(`[Router] Routing based on Intent: '${intent}' and State: '${state}'`);
+    // Agar state khali (undefined) hai, to usay 'onboarding_entry' maan lo
+    const currentState = state || 'onboarding_entry'; 
+    
+    console.log(`[Router] Routing based on Intent: '${intent}' and State: '${currentState}'`);
 
     if (intent === 'ask_question' || intent === 'general_chat') {
-        if (state.startsWith('gathering_')) {
+        // Ab hum currentState par check laga rahe hain
+        if (currentState.startsWith('gathering_')) {
             return 'business_logic';
         }
         return 'general_conversation';
@@ -378,26 +381,23 @@ async function handleBusinessLogic(userData, userMessage, intent) {
     }
 }
 
-// ORIGINAL, STRICT CODE (Isko wapas lagana hai)
+// CORRECTED app.post FUNCTION
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId) {
         console.error("❌ Request received without userId.");
         return res.status(400).json({ error: "User ID is required." });
     }
-    
 
-    // Har request ke liye behtar logging
     console.log(`\n--- [${userId}] New Request --- Message: "${message}" ---`);
 
-    // Aapka yeh main try...catch pehle se hi bohat acha hai.
-    // Yeh kisi bhi andruni function (jaise handleBusinessLogic) se aane wali ghalti ko pakar lega.
     try {
         console.log(`[${userId}] Fetching user data from Firebase...`);
         const userRef = db.ref(`chat_users/${userId}`);
         const userSnapshot = await userRef.once('value');
         let userData = userSnapshot.val();
 
+        // YEH HISSA BEHTAR KIYA GAYA HAI
         if (!userData) {
             console.log(`[${userId}] New user. Creating initial data.`);
             userData = {
@@ -405,6 +405,9 @@ app.post('/', async (req, res) => {
                 details: {},
                 chat_history: []
             };
+            // Naye user ka data foran Firebase mein save kar do
+            await userRef.set(userData); 
+            console.log(`[${userId}] Initial data for new user saved to Firebase.`);
         } else {
             console.log(`[${userId}] Existing user. Current state: ${userData.conversation_state}`);
         }
@@ -442,16 +445,16 @@ app.post('/', async (req, res) => {
         res.status(200).json({ reply: responseText, audioUrl: audioUrl });
 
     } catch (error) {
-        // YEH SAB SE AHEM CATCH BLOCK HAI
         console.error(`\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
         console.error(`[${userId}] XXX A FATAL ERROR OCCURRED IN THE MAIN ROUTE HANDLER XXX`);
         console.error("Error Message:", error.message);
-        console.error("Full Error Stack:", error.stack); // Yeh line ghalti ki poori tafseel de gi
+        console.error("Full Error Stack:", error.stack);
         console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n`);
         
         res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
     }
 });
+            
 
 // === SERVER START ===
 app.listen(port, () => {

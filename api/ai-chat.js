@@ -37,29 +37,35 @@ const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === AI & AUDIO FUNCTIONS (IMPROVED WITH ERROR HANDLING) ===
+// NAYA callCohere FUNCTION (SIRF LOGGING ADD HUI HAI)
 async function callCohere(systemPrompt, message, chatHistory) {
-    // Is function ko try...catch mein daalne ki zaroorat nahi kyunke yeh error 'throw' karta hai,
-    // jise isko call karne wala function (e.g., getIntent, handleBusinessLogic) pakar lega.
-    // Sirf behtar logging add ki gayi hai.
+    // --- YEH NAYA LOGGING CODE HAI ---
+    if (systemPrompt && systemPrompt.includes("CRITICAL INSTRUCTION")) {
+        console.log("✅ System Prompts se hidayat utha li gayi hain.");
+    } else {
+        console.warn("⚠️ WARNING: System Prompts theek se load nahi hue ya istemal nahi ho rahe.");
+    }
+    // --- NAYA LOGGING CODE KHATAM ---
+    
     console.log("[callCohere] Calling Cohere API...");
     const COHERE_API_KEY = process.env.COHERE_API_KEY;
     if (!COHERE_API_KEY) throw new Error("Cohere API Key not found!");
-    
+        
     const COHERE_API_URL = "https://api.cohere.ai/v1/chat";
     const requestBody = { model: "command-r-plus-08-2024", preamble: systemPrompt, message: message, chat_history: chatHistory, max_tokens: 1500 };
-    
+        
     const response = await fetch(COHERE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` }, body: JSON.stringify(requestBody) });
-    
+        
     if (!response.ok) {
         const errorBody = await response.text();
         console.error(`[callCohere] Cohere API Error Response: ${errorBody}`);
         throw new Error(`Cohere API responded with status: ${response.status}`);
     }
-    
+        
     console.log("[callCohere] Successfully received response from Cohere.");
     return await response.json();
-}
+                         }
+
 
 async function generateAudio(text) {
     // Aapke is function mein pehle se try...catch laga hua tha, jo ke bohat acha hai.
@@ -148,7 +154,6 @@ async function routeUserQuery(intent, state) {
     return 'business_logic';
 }
 
-// =================================================================
 // === EXPERT RECRUITER KA DIMAAGH (v3.0 - SUPER INTELLIGENT) (IMPROVED WITH ERROR HANDLING) ===
 // =================================================================
 async function handleBusinessLogic(userData, userMessage, intent) {
@@ -159,7 +164,18 @@ async function handleBusinessLogic(userData, userMessage, intent) {
         let nextState = state;
         let instructionForAI = ""; 
 
+        // YEH LINE AAPKE PAAS PEHLE SE HAI (Isko rehne dein)
         console.log(`[handleBusinessLogic] Current State: ${state}, Intent: ${intent}`);
+
+        // --- SIRF YEH NAYI LINE ADD KARNI HAI ---
+        console.log(`[handleBusinessLogic] Knowledge Base se state '${state}' ka data dhoond raha hoon...`);
+        // --- NAYI LINE KHATAM ---
+
+        // --- Baaqi saara code neeche waisa ka waisa rahega ---
+        // --- (Aapke saare if/else if blocks) ---
+        if (state === 'onboarding_entry') {
+            // ...
+            
 
         // --- Aapka poora if/else if ka structure yahan aayega ---
         // --- Is block mein koi tabdeeli nahi ki gayi ---

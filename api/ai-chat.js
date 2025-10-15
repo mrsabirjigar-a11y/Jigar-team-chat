@@ -381,7 +381,7 @@ async function handleBusinessLogic(userData, userMessage, intent) {
     }
 }
 
-// CORRECTED app.post FUNCTION
+// === FINAL, MOST ROBUST app.post FUNCTION ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId) {
@@ -397,21 +397,26 @@ app.post('/', async (req, res) => {
         const userSnapshot = await userRef.once('value');
         let userData = userSnapshot.val();
 
-        // YEH HISSA BEHTAR KIYA GAYA HAI
         if (!userData) {
             console.log(`[${userId}] New user. Creating initial data.`);
             userData = {
                 conversation_state: "onboarding_entry",
                 details: {},
-                chat_history: []
+                chat_history: [] // Yahan chat_history banayi ja rahi hai
             };
-            // Naye user ka data foran Firebase mein save kar do
             await userRef.set(userData); 
             console.log(`[${userId}] Initial data for new user saved to Firebase.`);
         } else {
             console.log(`[${userId}] Existing user. Current state: ${userData.conversation_state}`);
         }
         
+        // YEH NAYI SAFETY CHECK HAI
+        // Agar kisi wajah se purane user ka chat_history nahi hai, to bana do
+        if (!userData.chat_history) {
+            console.warn(`[${userId}] chat_history was missing. Initializing it now.`);
+            userData.chat_history = [];
+        }
+
         const intent = await getIntent(message, userData.conversation_state, userData.chat_history);
         const queryType = await routeUserQuery(intent, userData.conversation_state);
         
@@ -422,15 +427,21 @@ app.post('/', async (req, res) => {
             result = await handleBusinessLogic(userData, message, intent);
         } else { // general_conversation
             console.log(`[${userId}] Using General Conversation Brain...`);
-            const generalSystemPrompt = getSystemPrompt('general_conversation', userData);
-            const cohereResponse = await callCohere(generalSystemPrompt, message, userData.chat_history);
+            const cohereResponse = await callCohere(getSystemPrompt('general_conversation', userData), message, userData.chat_history);
             result = {
                 responseText: cohereResponse.text,
-                updatedUserData: userData
+                updatedUserData: userData 
             };
         }
 
         let { responseText, updatedUserData } = result;
+
+        // YEH DUSRI SAFETY CHECK HAI
+        // Response aane ke baad bhi check karo ke chat_history mojood hai
+        if (!updatedUserData.chat_history) {
+            console.warn(`[${userId}] chat_history was missing in updatedUserData. Re-initializing.`);
+            updatedUserData.chat_history = [];
+        }
 
         console.log(`[${userId}] Saving conversation to history...`);
         updatedUserData.chat_history.push({ role: "USER", message: message });
@@ -454,6 +465,7 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
     }
 });
+
             
 
 // === SERVER START ===

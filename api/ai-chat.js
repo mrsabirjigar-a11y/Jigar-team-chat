@@ -154,8 +154,8 @@ async function routeUserQuery(intent, state) {
     return 'business_logic';
 }
 
-// === EXPERT RECRUITER KA DIMAAGH (v3.0 - SUPER INTELLIGENT) (IMPROVED WITH ERROR HANDLING) ===
-// =================================================================
+
+// === MUKAMMAL AUR SYNTAX-CORRECTED handleBusinessLogic FUNCTION ===
 async function handleBusinessLogic(userData, userMessage, intent) {
     // Is poore function ko ek bare try...catch block mein daal diya gaya hai
     // taake iske andar kisi bhi 'if' block mein ghalti ho to pakri ja sake.
@@ -164,21 +164,11 @@ async function handleBusinessLogic(userData, userMessage, intent) {
         let nextState = state;
         let instructionForAI = ""; 
 
-        // YEH LINE AAPKE PAAS PEHLE SE HAI (Isko rehne dein)
+        // Dono logging lines yahan hain
         console.log(`[handleBusinessLogic] Current State: ${state}, Intent: ${intent}`);
-
-        // --- SIRF YEH NAYI LINE ADD KARNI HAI ---
         console.log(`[handleBusinessLogic] Knowledge Base se state '${state}' ka data dhoond raha hoon...`);
-        // --- NAYI LINE KHATAM ---
 
-        // --- Baaqi saara code neeche waisa ka waisa rahega ---
-        // --- (Aapke saare if/else if blocks) ---
-        if (state === 'onboarding_entry') {
-            // ...
-            
-
-        // --- Aapka poora if/else if ka structure yahan aayega ---
-        // --- Is block mein koi tabdeeli nahi ki gayi ---
+        // --- Neeche aapka poora if/else if ka structure hai ---
         if (state === 'onboarding_entry') {
             const entryPoint = knowledgeBase.onboarding_flow.entry_point;
             const isIslamic = userMessage.toLowerCase().includes("salam");
@@ -343,8 +333,7 @@ async function handleBusinessLogic(userData, userMessage, intent) {
             instructionForAI = knowledgeBase.referral_engine.initial_query;
             nextState = 'gathering_referral_info';
         }
-
-    else if (state === 'gathering_referral_info' && intent === 'provide_info') {
+        else if (state === 'gathering_referral_info' && intent === 'provide_info') {
             const userMessageLower = userMessage.toLowerCase();
             let leaderFound = null;
             for (const leader of knowledgeBase.referral_engine.leaders) {
@@ -395,7 +384,10 @@ async function handleBusinessLogic(userData, userMessage, intent) {
         // Is ghalti ko aage bhejein taake main route handler isay handle kar le
         throw error;
     }
-}
+    }
+        
+
+
 
 // === FINAL, MOST ROBUST app.post FUNCTION ===
 app.post('/', async (req, res) => {

@@ -136,23 +136,32 @@ async function getIntent(userMessage, currentState, chatHistory) {
     }
 }
 
-// CORRECTED routeUserQuery FUNCTION
+// === NAYA, ZYADA STRICT routeUserQuery FUNCTION ===
 async function routeUserQuery(intent, state) {
-    // Agar state khali (undefined) hai, to usay 'onboarding_entry' maan lo
-    const currentState = state || 'onboarding_entry'; 
-    
+    const currentState = state || 'onboarding_entry';
     console.log(`[Router] Routing based on Intent: '${intent}' and State: '${currentState}'`);
 
+    // Rule #1: Agar user koi aam sawal ya aam baat kar raha hai,
+    // LEKIN woh abhi business flow ke shuru mein hai (onboarding),
+    // to usay business logic mein hi rakho.
+    if ((intent === 'ask_question' || intent === 'general_chat') && currentState.startsWith('onboarding_')) {
+        console.log("[Router] Decision: User is in onboarding, keeping in business logic.");
+        return 'business_logic';
+    }
+
+    // Rule #2: Agar user koi aam sawal ya aam baat kar raha hai,
+    // aur woh business flow ke beech mein NAHI hai, tab usay General Brain ke paas bhejo.
     if (intent === 'ask_question' || intent === 'general_chat') {
-        // Ab hum currentState par check laga rahe hain
-        if (currentState.startsWith('gathering_')) {
-            return 'business_logic';
-        }
+        console.log("[Router] Decision: User is asking a general question, sending to general brain.");
         return 'general_conversation';
     }
-    
+
+    // Rule #3: Baaki har surat mein (confirm, reject, provide_info, etc.),
+    // hamesha Business Logic Brain istemal karo.
+    console.log("[Router] Decision: Intent is business-related, sending to business logic.");
     return 'business_logic';
 }
+    
 
 
 // === MUKAMMAL AUR SYNTAX-CORRECTED handleBusinessLogic FUNCTION ===

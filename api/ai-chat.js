@@ -66,40 +66,38 @@ async function callCohere(systemPrompt, message, chatHistory) {
     return await response.json();
                          }
 
-// === 100% CORRECTED generateAudio FUNCTION ===
+
+                                                       
 async function generateAudio(text) {
+    // Aapke is function mein pehle se try...catch laga hua tha, jo ke bohat acha hai.
+    // Maine sirf error logging ko thora behtar kiya hai.
     console.log("[generateAudio] Attempting to generate audio...");
     try {
-        // YEH LINE IS FUNCTION KE ANDAR HONI CHAHIYE
         const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
-        
         const AWS_ACCESS_KEY_ID = process.env.MY_AWS_ACCESS_KEY_ID;
         const AWS_SECRET_ACCESS_KEY = process.env.MY_AWS_SECRET_ACCESS_KEY;
         const AWS_REGION = process.env.MY_AWS_REGION;
-        
         if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_REGION) {
             console.warn("[generateAudio] AWS credentials not found. Skipping audio generation.");
             return null;
         }
-        
         const pollyClient = new PollyClient({ region: AWS_REGION, credentials: { accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY } });
         const params = { Text: text, OutputFormat: "mp3", VoiceId: "Kajal", Engine: "neural", LanguageCode: "hi-IN" };
         const command = new SynthesizeSpeechCommand(params);
         const { AudioStream } = await pollyClient.send(command);
-        
         const chunks = [];
         for await (const chunk of AudioStream) { chunks.push(chunk); }
         const buffer = Buffer.concat(chunks);
-        
         console.log("[generateAudio] Audio generated successfully.");
         return `data:audio/mpeg;base64,${buffer.toString("base64")}`;
     } catch (error) {
-        console.error("❌ [generateAudio] Audio Generation FAILED:", error.message);
+        // Behtar error logging
+        console.error("❌ [generateAudio] Audio Generation FAILED:");
+        console.error("Error Message:", error.message);
+        console.error("Stack Trace:", error.stack);
         return null; // App crash hone se bachane ke liye null return karein
     }
-        }
-                                                       
-
+                                                                                }
 
 
 // === NAYA FUNCTION: USER KE MESSAGE KA MATLAB SAMAJHNE KE LIYE (IMPROVED WITH ERROR HANDLING) ===
@@ -398,14 +396,7 @@ async function handleBusinessLogic(userData, userMessage, intent) {
     }
     }
 
-        console.error(`[${userId}] XXX A FATAL ERROR OCCURRED IN THE MAIN ROUTE HANDLER XXX`);
-        console.error("Error Message:", error.message);
-        console.error("Full Error Stack:", error.stack);
-        console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n`);
         
-        res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
-    }
-});
     
         
 // === FINAL, 100% CORRECTED app.post FUNCTION (v4) ===

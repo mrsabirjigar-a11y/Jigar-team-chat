@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const fs = require('fs');
+const path = require('path');
 const { getSystemPrompt } = require('./system_prompts');
 
 // === FIREBASE & KNOWLEDGE BASE INITIALIZATION ===
@@ -18,7 +19,7 @@ try {
     });
     console.log("✅ Firebase Yaddasht (Memory) Connected!");
 
-    const knowledgeBasePath = './knowledge_base.json';
+    const knowledgeBasePath = path.join(__dirname, 'knowledge_base.json');
     knowledgeBase = JSON.parse(fs.readFileSync(knowledgeBasePath, 'utf8'));
     console.log("✅ AI ka Dimaagh (Knowledge Base) Successfully Loaded!");
 } catch (error) {

@@ -399,7 +399,7 @@ async function handleBusinessLogic(userData, userMessage, intent) {
         
     
         
-// === FINAL, 100% CORRECTED app.post FUNCTION (v4) ===
+// === FINAL, MOST INTELLIGENT app.post FUNCTION (v5) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId) {
@@ -414,8 +414,10 @@ app.post('/', async (req, res) => {
         const userSnapshot = await userRef.once('value');
         let userData = userSnapshot.val();
 
+        let isNewUser = false; // Ek flag banaya
         if (!userData || !userData.conversation_state) {
             console.log(`[${userId}] New or incomplete user. Creating/Resetting data.`);
+            isNewUser = true; // Flag ko set kiya
             userData = {
                 details: userData?.details || {}, 
                 chat_history: userData?.chat_history || [],
@@ -431,14 +433,26 @@ app.post('/', async (req, res) => {
             userData.chat_history = [];
         }
 
-        const intent = await getIntent(message, userData.conversation_state, userData.chat_history);
-        const queryType = await routeUserQuery(intent, userData.conversation_state);
+        // --- YAHI ASAL, AAKHRI AUR FINAL FIX HAI ---
+        let queryType;
+        let intent;
+
+        // Agar user bilkul naya hai, to AI se intent poochne ki zaroorat hi nahi!
+        // Zabardasti usay 'business_logic' mein bhejo.
+        if (isNewUser) {
+            console.log(`[Router] User is brand new. Forcing 'business_logic'.`);
+            queryType = 'business_logic';
+            intent = 'confirm'; // Hum farz kar lete hain ke usne confirm kiya hai
+        } else {
+            // Agar purana user hai, tab AI se intent poocho
+            intent = await getIntent(message, userData.conversation_state, userData.chat_history);
+            queryType = await routeUserQuery(intent, userData.conversation_state);
+        }
+        // --- FIX KHATAM ---
         
         let result;
         console.log(`[Router] Faisla: Message ko '${queryType}' brain ke paas bheja ja raha hai.`);
 
-        // --- YAHI ASAL FIX HAI ---
-        // Humne is logic ko bilkul saaf aur wazeh kar diya hai
         if (queryType === 'business_logic') {
             console.log(`[${userId}] Using Business Logic Brain...`);
             result = await handleBusinessLogic(userData, message, intent);
@@ -451,7 +465,6 @@ app.post('/', async (req, res) => {
                 updatedUserData: userData 
             };
         }
-        // --- FIX KHATAM ---
 
         let { responseText, updatedUserData } = result;
 
@@ -480,8 +493,7 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
     }
 });
-                                                
-
+    
     
 
             

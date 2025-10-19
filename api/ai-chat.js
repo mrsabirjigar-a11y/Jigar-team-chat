@@ -1,5 +1,5 @@
 // =================================================================
-// FINAL ai-chat.js (Version 6.0 - Fine-Tuned Gemma Model)
+// FINAL ai-chat.js (Version 7.0 - Using .env for Secrets)
 // =================================================================
 
 // === LIBRARIES ===
@@ -8,7 +8,12 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const fs = require('fs');
 const path = require('path');
-const { HfInference } = require('@huggingface/inference'); // Nayi Library
+const { HfInference } = require('@huggingface/inference');
+
+// --- YEH NAYI LINES HAIN ---
+const dotenv = require('dotenv');
+dotenv.config();
+// ---------------------------
 
 // === FIREBASE INITIALIZATION (Waisa hi hai) ===
 try {
@@ -27,14 +32,14 @@ try {
 
 const db = admin.database();
 
-// === HUGGING FACE SETUP (Naya Hissa) ===
+// === HUGGING FACE SETUP (Ab yeh .env file se token uthayega) ===
 const HF_TOKEN = process.env.HUGGING_FACE_TOKEN;
 if (!HF_TOKEN) {
-    console.error("❌ CRITICAL: Hugging Face Token not found in environment variables!");
+    console.error("❌ CRITICAL: Hugging Face Token not found in .env file!");
     process.exit(1);
 }
-const hf = new HfInference();
-const YOUR_MODEL_ID = "sabirj/Jigar-Team-AI-Bot"; // <-- YAHAN AAPKA MODEL HAI
+const hf = new HfInference(HF_TOKEN); // Token yahan istemal ho raha hai
+const YOUR_MODEL_ID = "sabirj/Jigar-Team-AI-Bot";
 console.log(`✅ Hugging Face client tayyar hai. Model: ${YOUR_MODEL_ID}`);
 
 
@@ -44,24 +49,21 @@ const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === NAYA, Aasan call_Jigar_Team_AI FUNCTION ===
+// === call_Jigar_Team_AI FUNCTION (Waisa hi hai) ===
 async function call_Jigar_Team_AI(userMessage, chatHistory) {
     console.log("[call_Jigar_Team_AI] Calling your fine-tuned Gemma model...");
     
-    // History ko model ke format mein tabdeel karna
     const formattedHistory = chatHistory.map(turn => ({
-        role: turn.role.toLowerCase(), // 'USER' ko 'user' aur 'CHATBOT' ko 'assistant' banana
+        role: turn.role.toLowerCase() === 'user' ? 'user' : 'assistant',
         content: turn.message
     }));
 
-    // Model ko call karna
     const responseStream = hf.chatCompletionStream({
         model: YOUR_MODEL_ID,
         messages: [...formattedHistory, { role: "user", content: userMessage }],
         max_tokens: 500,
     });
 
-    // Jawab ko jama karna
     let finalResponse = "";
     for await (const chunk of responseStream) {
         finalResponse += chunk.choices[0]?.delta?.content || "";
@@ -75,7 +77,7 @@ async function call_Jigar_Team_AI(userMessage, chatHistory) {
     return finalResponse.trim();
 }
 
-// === generateAudio FUNCTION (Aapka original, bilkul waisa hi) ===
+// === generateAudio FUNCTION (Waisa hi hai) ===
 async function generateAudio(text) {
     console.log("[generateAudio] Attempting to generate audio...");
     try {
@@ -102,7 +104,7 @@ async function generateAudio(text) {
     }
 }
 
-// === FINAL, Aasan app.post FUNCTION ===
+// === app.post FUNCTION (Waisa hi hai) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId) {
@@ -112,24 +114,19 @@ app.post('/', async (req, res) => {
     console.log(`\n--- [${userId}] New Request --- Message: "${message}" ---`);
 
     try {
-        // User ka data Firebase se hasil karna
         const userRef = db.ref(`chat_users/${userId}`);
         const userSnapshot = await userRef.once('value');
         let userData = userSnapshot.val() || {};
         let chatHistory = userData.chat_history || [];
 
-        // --- NAYE MODEL KO CALL KARNA ---
         const responseText = await call_Jigar_Team_AI(message, chatHistory);
         
-        // History ko update karna
         chatHistory.push({ role: "USER", message: message });
         chatHistory.push({ role: "CHATBOT", message: responseText });
 
-        // Firebase mein nayi history save karna
         await userRef.child('chat_history').set(chatHistory);
         console.log(`[${userId}] Firebase sync complete.`);
 
-        // --- AUDIO GENERATE KARNA (Aapka purana code) ---
         const audioUrl = await generateAudio(responseText);
         
         console.log(`[${userId}] Sending final response to user.`);
@@ -147,3 +144,4 @@ app.post('/', async (req, res) => {
 app.listen(port, () => {
     console.log(`✅ Jigar Team AI Server (Fine-Tuned Edition) is running on port ${port}`);
 });
+                                      

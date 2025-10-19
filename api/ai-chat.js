@@ -33,7 +33,7 @@ if (!HF_TOKEN) {
     console.error("❌ CRITICAL: Hugging Face Token not found in environment variables!");
     process.exit(1);
 }
-const hf = new HfInference(HF_TOKEN);
+const hf = new HfInference();
 const YOUR_MODEL_ID = "sabirj/Jigar-Team-AI-Bot"; // <-- YAHAN AAPKA MODEL HAI
 console.log(`✅ Hugging Face client tayyar hai. Model: ${YOUR_MODEL_ID}`);
 

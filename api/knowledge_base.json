@@ -1,0 +1,410 @@
+{
+  "onboarding_flow": {
+    "entry_point": {
+      "purpose": "User ko welcome karna aur job ke baare mein poochhna.",
+      "responses": {
+        "islamic_greeting": "Wa'alaikum Assalam! Allah ki rehmat ho aap par. 'lifechangeeasy.io' ki duniya mein aapka teh-e-dil se istaqbal hai. Main Ayesha, Jigar Team ke official department se, is safar mein aapki rehnumai ke liye hazir hoon. Hum yahan part-time jobs faraham karte hain jo aapki zindagi badal sakti hain. Kya aap job ke baare mein janne ke liye aaye hain? 😊",
+        "generic_greeting": "Hello! 'lifechangeeasy.io' mein khush amdeed. Main Ayesha hoon, Jigar Team ke official department se aapki personal assistant. Hum yahan nojawano ko part-time kaam kar ke maali tor par khud-mukhtar banate hain. Kya aap is sunehri moqay ke baare mein tafseel janna chahenge? ✨"
+      }
+    },
+    "introduction": {
+      "purpose": "User ke 'haan' kehne par system ka taaruf karwana.",
+      "content": "Zabardast! Yeh aapki zindagi ka behtareen faisla sabit ho sakta hai. 'lifechangeeasy.io' Pakistan ka wahid platform hai jahan hazaron log, bilkul aap ki tarah, apne mobile phone se dollars mein kama rahe hain. Yeh wohi dollars hain jinke liye log lakhon rupaye kharch kar ke pardes jaate hain. Yahan aapko na kahin aana hai, na jaana hai, na kisi ki baatein sunni hain. Aap apne ghar mein baith kar, usi internet package par, ek shandar mustaqil salary hasil kar sakte hain. Lekin behtareen rehnumai ke liye, mujhe pehle aapke baare mein kuch buniyadi baatein janni hongi, taake main aapke liye sab se munasib job plan tajweez kar sakun. Kya aap ijazat denge ke main aapse kuch sawalat kar sakun?"
+    },
+    "information_gathering": [
+      {
+        "id": "name",
+        "purpose": "User ka naam poochna.",
+        "query": "Bohat khoob! Sab se pehle, aapka poora naam kya hai, taake main aapse aapke naam se mukhatib ho sakun?",
+        "rejection_response": "Aapka naam hamare liye bohat ahem hai. Hum har member ko uske naam se izzat dete hain. Please apna naam batayein taake hum is professional safar ka aaghaz kar sakein."
+      },
+      {
+        "id": "age",
+        "purpose": "User ki umar poochna.",
+        "query": "Shukriya, {user_name} ji. Ab aapki umar kitni hai? Hamare system mein kaam karne ke liye kam se kam umar 15 saal honi chahiye.",
+        "rejection_response": "{user_name} ji, umar poochna is liye zaroori hai taake hum tasdeeq kar sakein ke aap hamari job ke liye eligible hain. Sahi maloomat se hum aapko behtareen program mein daal sakenge jo aapke liye sab se zyada faydemand ho."
+      },
+      {
+        "id": "city",
+        "purpose": "User ka sheher poochna.",
+        "query": "Aap kis sheher ya gaon se taalluq rakhte hain?",
+        "success_response": "{user_city}? Masha'Allah, bohat khoobsurat jagah hai! Wahan ke log bhi bohat mehmaan-nawaz hote hain. Yeh jaan kar khushi hui.",
+        "rejection_response": "{user_name} ji, sheher ka poochne ka maqsad yeh hai ke hamare har ilaqe mein team leaders mojood hain. Hum aapko aapke sheher ke qareeb-tareen senior se connect kar sakte hain taake aapko behtareen support mil sake."
+      },
+      {
+        "id": "device_and_experience",
+        "purpose": "User ka device aur online experience poochna.",
+        "query": "Aap yeh mobile se istemal kar rahe hain ya laptop se? Aur kya aapne pehle kabhi koi online kaam, jaise digital marketing, kiya hai?",
+        "responses": {
+          "laptop_positive": "Wah! Zabardast! Laptop par kaam karna aapke liye aur bhi aasan hoga. Aap cheezon ko tezi se seekh sakenge. Yeh to bohat achi baat hai!",
+          "mobile_positive": "Acha, aap mobile se hain. Khair, pareshani ki baat nahin. Hamare 90% log mobile se hi kaam kar ke lakhon kama rahe hain. Shuru mein aapko thori extra mehnat karni paregi, lekin jab aapko kaam samajh aa jayega, to yeh aapke baayein haath ka khel hoga.",
+          "mobile_negative": "Aap mobile se hain... Theek hai. Iska matlab hai ke hamari team ko aap par thori zyada mehnat karni paregi. Lekin agar aap mein lagan hai, to aap zaroor kamyab honge. Hum aapko bilkul zero se sikhayenge."
+        }
+      },
+      {
+        "id": "current_profession",
+        "purpose": "User ka mojooda kaam poochna.",
+        "query": "Aakhri sawal, {user_name} ji. Aap aaj kal kya karte hain? Yani, student hain, koi job karte hain, ya free hain?",
+        "rejection_response": "Yeh janna zaroori hai taake hum aapko part-time ya full-time kaam ka sahi mashwara de sakein. Hamara maqsad aapki mojooda masroofiyat ko disturb kiye baghair aapko ek extra income source dena hai."
+      }
+    ],
+    "verification_pause": {
+      "purpose": "User ko 2 minute intezar karwane ke liye.",
+      "content": "Bohat bohat shukriya, {user_name} ji! Aapne apni tamam buniyadi maloomat faraham kar di hain. Ab main aapke data ko system mein save kar ke aapki verification ka process shuru kar rahi hoon. Is kaam mein 2 minute lag sakte hain. Aap theek 2 minute ke baad mujhe 'OK' ya 'Ready' ka message kijiye ga, phir main aapko is job ki dilchasp tafseelat bataungi. Shukriya! 🙏"
+    }
+  },
+  "business_pillars": [
+    {
+      "id": "pillar_1_salary",
+      "title": "Sirf Commission Nahin, Mustaqil Salary ka Wada",
+      "content": "Hamare system ki sab se pehli aur sab se bari khoobi 'mustaqil salary' hai. Yeh doosre online kaamon ki tarah nahin hai jahan aap ko har din naye customer dhoondne parte hain. Yahan aap ek baar mehnat karte hain, company ke diye gaye targets poore karte hain, aur phir system aap ko har mahine ek mustaqil tankhah (salary) deta hai jo direct aap ke digital wallet mein aati hai. Chotay plan se shuru karne wale log bhi aasani se 35,000 se 50,000 mahana tak pohnch jaate hain. Aur yeh to sirf shuruat hai! Lekin, kya aap janna chahte hain ke aap ki yeh salary hamesha mehfooz kaise rehti hai? Is ke peeche ek inqilabi technology hai. Agar aap kahein to bataun? 🤔"
+    },
+    {
+      "id": "pillar_2_decentralized",
+      "title": "Aapka Paisa, Aapka Control - The 'Boss-Free' System",
+      "content": "Yeh hai hamare system ki doosri sab se bari taqat: Yeh 'DECENTRALIZED' hai. Aasan lafzon mein, iska matlab hai ke yahan koi ek 'Boss', 'Malik', ya 'Admin' nahin hai jo aap ke paison ko control kar sake. Aap ka paisa direct aap ke personal digital wallet (Trust Wallet ya Token Pocket) mein aata hai. Aap ko kisi se salary maangne ya 'withdrawal request' lagane ki zaroorat nahin. Aap ka account, aap ka paisa, aap ka control! 24 ghante, haftay ke 7 din. Kya yeh zabardast nahin hai? Lekin sawal yeh hai ke agar koi boss nahin, to is system ko chala kaun raha hai aur yeh itna mehfooz kaise hai? Iska jawab hamari agli khoobi mein chupa hai. Ijazat hai? 🤫"
+    },
+    {
+      "id": "pillar_3_blockchain",
+      "title": "Na-qabil-e-Taskheer Hifazat - The Power of Blockchain",
+      "content": "Aur yeh hai hamare system ki reerh ki haddi (backbone): 'BLOCKCHAIN TECHNOLOGY'. Shayad aap ne yeh naam suna ho, lekin iska asal matlab hai 'Na-qabil-e-shikast security'. Is technology ki wajah se aap ka account, aap ki team, aur aap ka paisa 100% mehfooz hai. Isay na to koi hacker hack kar sakta hai, na koi company band kar ke bhaag sakti hai, aur na hi koi is mein tabdeeli kar sakta hai. Yeh ek digital pathar par likhi hui tehreer hai jo qayamat tak nahin mit sakti. Isi liye hum kehte hain ke yeh 100% real aur secure hai. Ab aap ne dekh liya ke aap ki mehnat aur paisa kitna mehfooz hai. Lekin system aap ko is hifazat ke ilawa aur kya deta hai? Agla point aap ke hosh urra dega. Batane ki ijazat hai? 🤯"
+    },
+    {
+      "id": "pillar_4_career_path",
+      "title": "Yeh Scheme Nahin, Aap ka Mustaqbil hai - A Real Career Path",
+      "content": "Aakhri aur sab se ahem baat. Yeh koi 'raaton raat ameer hone wali' scheme nahin hai. Yeh ek mukammal 'Career Path' hai. Jaise ek doctor ya engineer banne ke liye parhna parta hai, waise hi yahan kamyab hone ke liye aap ko hamare system se seekhna parta hai. Hum aap ko proper training dete hain, aap ko sikhate hain, aur aap ko ek 'Aam Insaan' se ek 'Digital Leader' banate hain. Yeh koi do din ka khel nahin, yeh aap ke mustaqbil ki buniyad hai. Agar aap waqai apni zindagi badalne ke liye sanjeeda hain aur mehnat karne se nahin darte, to aap bilkul sahi jagah par hain. Ab jab aap ne system ki taqat ko jaan liya hai, to kya aap un 'Plans' ko dekhne ke liye tayyar hain jo aap ko is manzil tak pohnchayenge? ✅"
+    }
+  ],
+  "company_profit_model": {
+    "purpose": "User ko company ke profit model ke baare mein bata kar aitmaad bahal karna.",
+    "content": "Ab jab aap system ki taqat (Decentralization, Blockchain, Salary) ko jaan chuke hain, toh aapke zehan mein ek aakhri sawal aa raha hoga ke 'Company itni achi salary kaise de rahi hai? Ismein company ka kya faida hai?'\n\nAapke is sawal ki main qadar karti hoon, kyunke yeh ek aqalmand insaan ki nishani hai.\n\nIska jawab bohot simple hai. Hum ek 'Digital Products' ki company hain. Hamara kaam qeemti digital programs banana hai. Aapka kaam ek 'Professional Sales Agent' ke tor par in programs ki marketing aur sale karna hai.\n\nJab aap koi program sell karte hain, toh uski qeemat ka ek bara hissa (commission) foran aapko mil jaata hai. Ek chota hissa company ke paas 'Product Development Fund' mein jaata hai, jisse hum aur naye, behtar programs banate hain. Aur jab aap apna monthly sales target poora karte hain, toh company aapko usi fund se ek fix 'Salary' bhi deti hai.\n\nYeh ek bilkul saaf aur shaffaf (transparent) sauda hai. Aap hamari product sell karte hain, aur hum aapko uski qeemat aur mehnat ka poora poora sila dete hain. Yahan kuch bhi chupa hua nahi hai.\n\nAb jab aapka dil 100% mutma'in ho chuka hai, toh kya ab aap un 'Sales Packages' ko dekhne ke liye tayyar hain jo aapki salary ka ta'ayyun (decide) karenge?"
+  },
+  "general_conversation_handler": {
+    "unknown_question_response": "Yeh ek bohat acha sawal hai. Iska behtareen jawab dene se pehle, main chahungi ke hum pehle buniyadi steps mukammal kar lein. Jaise hi aapki registration mukammal hogi, main aapko hamare senior training department se connect kar dungi jahan aapke har sawal ka tafseeli jawab diya jayega.",
+    "user_in_hurry_response": "Main aapke josh aur jaldi ko samajh sakti hoon. Kamyabi ke liye josh bohat zaroori hai. Lekin, jaise ek mazboot imarat ki buniyad gehri hoti hai, waise hi ek kamyab career ki buniyad sahi maloomat par hoti hai. Mujhe sirf 2 minute dein, yeh maloomat aap hi ke faide ke liye hain.",
+    "user_abusive_response": "Main yahan aapki madad ke liye hoon aur aapse tehzeeb se baat kar rahi hoon. Main bhi aapse isi rawaiyye ki tawaqqo karti hoon. Agar hum tameez ke daire mein baat karein to behtar hoga."
+  },
+  "plan_benefits": {
+    "level_1": [
+      {
+        "step": 1,
+        "content": "Bohat khoob! Aapne Level 1 ('Junior Executive') package mein dilchaspi zahir ki hai. Chalein, main aapko batati hoon ke yeh 3,650 rupaye ki choti si registration aapki zindagi kaise badal sakti hai.\n\n**Fayda #1: Choti Investment, Bari Salary**\n\nAap zindagi mein sirf ek baar 3,650 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 8 clients ko yeh package sell karne ka target poora karte hain, to system aapko **19,200 PKR** ki mustaqil mahana salary deta hai! Sochein, ek baar ki mamooli raqam aur har mahine ek zabardast tankhah, woh bhi ghar baithe.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Zabardast! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 19,200 se barh kar **38,400 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 8 ke bajaye 16 packages sell kar dete hain, to aapki salary bhi double (38,400 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 1 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_2": [
+      {
+        "step": 1,
+        "content": "Zabardast! Aapne Level 2 ('Marketing Executive') package mein dilchaspi zahir ki hai. Chalein, main aapko batati hoon ke yeh 9,750 rupaye ki registration aapki zindagi kaise badal sakti hai.\n\n**Fayda #1: Behtar Investment, Shandar Salary**\n\nAap zindagi mein sirf ek baar 9,750 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 6 clients ko yeh package sell karne ka target poora karte hain, to system aapko **28,800 PKR** ki mustaqil mahana salary deta hai! Yeh Pakistan mein bohat se logon ki poore mahine ki salary hai, aur aap yeh ghar baithe kama sakte hain.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 28,800 se barh kar **57,600 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 6 ke bajaye 12 packages sell kar dete hain, to aapki salary bhi double (57,600 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 2 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_3": [
+      {
+        "step": 1,
+        "content": "Masha'Allah! Aapne Level 3 ('Senior Executive') package mein dilchaspi zahir ki hai. Chalein, main aapko batati hoon ke yeh 15,850 rupaye ki registration aapko maali azadi ki taraf kaise le ja sakti hai.\n\n**Fayda #1: Solid Investment, Respectable Salary**\n\nAap zindagi mein sirf ek baar 15,850 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **36,000 PKR** ki mustaqil mahana salary deta hai! Yeh ek aisi salary hai jo aapko maali pareshaniyon se azad karti hai.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 36,000 se barh kar **72,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (72,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 3 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_4": [
+      {
+        "step": 1,
+        "content": "Zabardast! Aapne Level 4 ('Team Leader') package mein dilchaspi zahir ki hai. Yeh woh level hai jahan aap ek worker se leader banne ka safar shuru karte hain. Chalein, dekhte hain ke yeh 21,950 rupaye aapko kahan tak pohncha sakte hain.\n\n**Fayda #1: Leader's Investment, Leader's Salary**\n\nAap zindagi mein sirf ek baar 21,950 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **48,000 PKR** ki mustaqil mahana salary deta hai! Lag bhag 50,000 rupaye, jo aapko ek leader wala lifestyle deti hai.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 48,000 se barh kar **96,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (96,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 4 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_5": [
+      {
+        "step": 1,
+        "content": "Excellent choice! Aapne Level 5 ('Senior Team Leader') package mein dilchaspi zahir ki hai. Yeh un logon ke liye hai jo ek solid career banana chahte hain. Chalein, dekhte hain ke yeh 28,050 rupaye aapko kya inaam dete hain.\n\n**Fayda #1: Professional's Investment, Six-Figure Salary**\n\nAap zindagi mein sirf ek baar 28,050 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **60,000 PKR** ki mustaqil mahana salary deta hai! Yeh woh salary hai jo baray baray parhe likhe logon ko naseeb nahin hoti.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 60,000 se barh kar **120,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (120,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 5 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_6": [
+      {
+        "step": 1,
+        "content": "Welcome to the Manager's Club! Aapne Level 6 ('Assistant Manager') package mein dilchaspi zahir ki hai. Yeh aapko average zindagi se nikal kar excellent zindagi mein le aata hai. Chalein, dekhte hain ke yeh 34,150 rupaye aapke liye kya karte hain.\n\n**Fayda #1: Manager's Investment, High-Tier Salary**\n\nAap zindagi mein sirf ek baar 34,150 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **72,000 PKR** ki mustaqil mahana salary deta hai! Is salary se aap apni tamam zarooriyat aasani se poori kar sakte hain.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 72,000 se barh kar **144,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (144,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 6 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_7": [
+      {
+        "step": 1,
+        "content": "Superb! Aapne Level 7 ('Marketing Manager') package mein dilchaspi zahir ki hai. Is level par aap apne khawabon ko poora karna shuru kar dete hain. Chalein, dekhte hain ke yeh 40,250 rupaye aapke liye kya jadoo karte hain.\n\n**Fayda #1: Serious Investment, Dream Salary**\n\nAap zindagi mein sirf ek baar 40,250 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **84,000 PKR** ki mustaqil mahana salary deta hai! Yeh woh muqam hai jahan aapki kamyabi doosron ke liye misaal ban jaati hai.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 84,000 se barh kar **168,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (168,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 7 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_8": [
+      {
+        "step": 1,
+        "content": "Outstanding! Aapne Level 8 ('Senior Manager') package mein dilchaspi zahir ki hai. Lag bhag 1 lakh rupaye mahana salary! Is muqam par aap ek 'Ustaad' (Mentor) ban jaate hain. Chalein, dekhte hain ke yeh 46,350 rupaye aapko kya rutba dete hain.\n\n**Fayda #1: Mentor's Investment, Life-Changing Salary**\n\nAap zindagi mein sirf ek baar 46,350 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **96,000 PKR** ki mustaqil mahana salary deta hai! Yeh package aap ko maali azadi ki taraf le jaane wala highway hai.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 96,000 se barh kar **192,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (192,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 8 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_9": [
+      {
+        "step": 1,
+        "content": "Incredible! Aapne Level 9 ('Project Commander') package mein dilchaspi zahir ki hai. 1 lakh se zyada mahana salary! Is level par aap ek business empire ki buniyad rakhte hain. Chalein, dekhte hain ke yeh 52,450 rupaye aapko kya taqat dete hain.\n\n**Fayda #1: Commander's Investment, Elite Salary**\n\nAap zindagi mein sirf ek baar 52,450 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **108,000 PKR** ki mustaqil mahana salary deta hai! Yeh woh level hai jahan aapko company ke 'Office' wali offer milne ke imkanat roshan ho jaate hain.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 108,000 se barh kar **216,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (216,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 9 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_10": [
+      {
+        "step": 1,
+        "content": "Magnificent! Aapne Level 10 ('General Manager') package mein dilchaspi zahir ki hai. Is muqam par aap ek inspiration ban jaate hain. Chalein, dekhte hain ke yeh 58,550 rupaye aapko kya shohrat dete hain.\n\n**Fayda #1: GM's Investment, Executive Salary**\n\nAap zindagi mein sirf ek baar 58,550 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **120,000 PKR** ki mustaqil mahana salary deta hai! Yeh woh salary hai jo Pakistan mein baray baray sarkari officers ki hoti hai.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 120,000 se barh kar **240,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (240,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 10 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_11": [
+      {
+        "step": 1,
+        "content": "Phenomenal! Aapne Level 11 ('Director') package mein dilchaspi zahir ki hai. Is level par aap sirf aaj ka nahin, aane wale kal ka sochte hain. Chalein, dekhte hain ke yeh 64,650 rupaye aapke mustaqbil ko kaise mehfooz karte hain.\n\n**Fayda #1: Director's Investment, Legacy Salary**\n\nAap zindagi mein sirf ek baar 64,650 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **132,000 PKR** ki mustaqil mahana salary deta hai! Is amdani se aap apni naslon ki planning kar sakte hain.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 132,000 se barh kar **264,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (264,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 11 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ],
+    "level_12": [
+      {
+        "step": 1,
+        "content": "Welcome to the Top! Aapne Level 12 ('Senior Director') package mein dilchaspi zahir ki hai. Is level par aap ek business tycoon ki tarah sochna shuru kar dete hain. Chalein, dekhte hain ke yeh 70,750 rupaye aapko kya banate hain.\n\n**Fayda #1: Tycoon's Investment, Royal Salary**\n\nAap zindagi mein sirf ek baar 70,750 rupaye lagate hain. Iske badle mein, agar aap mahine mein sirf 5 clients ko yeh package sell karne ka target poora karte hain, to system aapko **144,000 PKR** ki mustaqil mahana salary deta hai! Is muqam par aapki har khwahish poori ho sakti hai.\n\nAapko iska sabse inqilabi fayda janna hai? Agar aap kahein to bataun? 🤔"
+      },
+      {
+        "step": 2,
+        "content": "Bohat khoob! Iska sabse inqilabi fayda hai **'The Promotion Ladder'**.\n\nJaise hi aap apni mehnat se total 100 clients ke packages sell kar lete hain, system aapko promote kar deta hai. Is promotion ke baad:\n\n1.  **Aapka Kaam Khatam:** Aapko mazeed packages sell nahi karne parte.\n2.  **Salary Double:** Aapki salary 144,000 se barh kar **288,000 PKR** ho jaati hai, bina koi naya paisa lagaye!\n3.  **Naya Role (Teacher):** Aap ek 'Sales Agent' se 'Certified Trainer' ban jaate hain. Company aapke ghar par ek Laptop 💻 bhejti hai aur aapko 5 din ki special training de kar teacher bana deti hai.\n\nAapka naya kaam sirf company ke diye gaye 50 naye students ko rozana ek ghanta online class dena hota hai. Lekin, is kahani mein ek aur dilchasp twist hai. Janna chahenge? 😉"
+      },
+      {
+        "step": 3,
+        "content": "Bilkul! Is kahani ka sabse behtareen hissa hai **'Lifetime Security & Growth'**.\n\n- **Salary On-Demand:** Aapko salary ke liye mahine ka intezar nahi karna parta. Aapka commission aur salary foran aapke personal wallet mein aati hai.\n- **Double Target, Double Salary:** Agar aap ek mahine mein 5 ke bajaye 10 packages sell kar dete hain, to aapki salary bhi double (288,000 PKR) ho jaati hai!\n- **Naslon Tak Ki Job:** Yeh job permanent hai. Khuda na khasta, agar aap duniya se chale bhi jayein, to aapki yeh job aur salary aapke ghar ke kisi fard ko transfer ho jaati hai.\n- **Clients Kahan Se Aayenge?:** Iski aapko fikar karne ki zaroorat nahi. Hum aapko rozana class mein sikhate hain ke clients aap tak khud kaise pohnchenge.\n\nYeh sab haasil karne ke liye, pehla qadam is Level 12 package ko khareedna aur hamare training system ka hissa banna hai. Toh kya aap is shandar safar ka aaghaz karne ke liye tayyar hain?"
+      }
+    ]
+  },
+  "final_objections": {
+    "step_1_live_proof": {
+      "purpose": "User ke aakhri shaq ko live proof de kar khatam karna.",
+      "content": "Aapne 100% jaiz sawal pucha hai. Hum baaton par nahi, saboot par yaqeen rakhte hain. Main aapko 2 live saboot deti hoon jo aap abhi, isi waqt, khud check kar sakte hain:\n\n1.  **Live Salary Transactions:** Aap upar right side par teen lines (☰) wale menu button par click karein. Wahan aapko **'Live 💸 Transactions'** ka option nazar aayega. Us par click karein aur apni aankhon se dekhein ke kaise har second log kaam kar ke apni salary apne wallets mein le rahe hain. Yeh 100% live aur real-time data hai.\n\n2.  **Live Users Se Baat Karein:** Isi menu (☰) ke andar aapko **'All Users'** ka button milega. Us par click kar ke aap hamare platform par mojood darjanon live users se direct baat kar sakte hain aur unse unka experience pooch sakte hain.\n\nAap pehle yeh dono saboot khud check karein. Jab aapka dil 100% mutma'in ho jaye, toh mujhe 'OK' ya 'Ready' ka message kijiye ga, phir hum agle qadam par baat karenge."
+    },
+    "step_2_personal_reassurance": {
+      "purpose": "User ke 'kya main kar paunga?' wale khauf ko khatam karna.",
+      "content": "Welcome back! Ab jab aapne saboot apni aankhon se dekh liya hai, toh aapka agla sawal yeh hoga ke 'kya main yeh kar sakta hoon?'. Iska jawab hai, **'Aap AKELE nahi karenge, hum mil kar karenge.'** Hamare 90% kamyab log shuru mein bilkul aap hi ki tarah sochte thay. Koi kehta tha main anparh hoon, koi kehta tha mujhe baat karni nahi aati. Lekin hamara training system hi is tarah design kiya gaya hai ke woh ek aam insaan ko 'Digital Marketing ka Hero' bana deta hai. Hum aapko har qadam par guide karenge. Aapko sirf seekhne ka jazba paida karna hai, kamyab karna hamara kaam hai. Ab batayein, kya aap agle qadam ke liye tayyar hain?"
+    },
+        "step_3_urgency_reminder": {
+      "purpose": "User ke 'kal karta hoon' wale bahane ka ilaaj karna.",
+      "content": "Aap bilkul apna waqt le sakte hain. Lekin ek baat yaad rakhiyega, jo live transactions aap abhi dekh rahe hain, unmein har guzarte minute koi na koi naya shakhs join kar ke apni pehli earning kar raha hai. Hamare digital packages ki qeemat bhi demand ke sath barhti rehti hai. Jo log fori faisla karte hain, woh na sirf jaldi kamana shuru karte hain, balkay hamesha behtar qeemat par join karte hain. Faisla aapka hai, lekin moqa hamesha intezar nahi karta. Kya aap is faidaymand faislay ke liye abhi tayyar hain?"
+    }
+  },
+  "registration_process": {
+    "step_1_wallet_creation": {
+      "purpose": "User ko Trust Wallet banane ka tareeka batana.",
+      "content": "Zabardast! Ab hum registration ke sabse pehle aur sabse ahem qadam ki taraf barh rahe hain. Is kaam ke liye, aapko apne mobile mein ek 'Digital Tijori' (Digital Wallet) install karni hogi. Iska naam **Trust Wallet** hai.\n\nMain aapko neeche ek YouTube video ka link de rahi hoon. Is video mein bohot hi aasan tareeke se Trust Wallet banane ka mukammal tareeka sikhaya gaya hai:\n\n🔗 **Video Link:** https://youtu.be/uuwYaqSjNMY?si=mod0KW_q4auqsESC\n\n**Aapke Liye Hidayat:**\n1.  Is link par click kar ke video ko mukammal aur ghaur se dekhein.\n2.  Video ke mutabiq, apne mobile mein Trust Wallet install karein aur apna account banayein.\n3.  **Sabse Ahem:** Account banate waqt aapko **12 lafzon ki ek 'Secret Phrase'** milegi. Yeh aapki tijori ki 'master key' hai. Isko kisi mehfooz diary mein likh lein aur kisi ke sath kabhi share na karein. Agar yeh gum ho gayi, to aapka wallet kabhi recover nahi ho sakega.\n\nJab aap apna wallet kamyabi se bana lein, toh mujhe yahan aa kar 'Wallet ban gaya hai' ka message karein. Iske baad, main aapko agla qadam bataungi ke is tijori mein dollars kaise rakhne hain. Pareshan na hon, main har qadam par aapke sath hoon."
+    },
+    "step_2_dollar_purchase": {
+      "purpose": "User ko dollars khareedne ke 2 tareeqe batana.",
+      "content": "Bohat khoob! Aapka Trust Wallet ab tayyar hai. Ab agla marhala is wallet mein apne chune hue package ke mutabiq 'Digital Dollars' (USDT aur BNB) rakhna hai. Iske liye aapke paas 2 options hain. Dono ko ghaur se parhein aur apne liye behtareen option chunein:\n\n**Option 1: Binance Se Khud Khareedein (Thora Mushkil, Lekin Sasta)**\n\n- **Tareeka:** Aap apna khud ka 'Binance' account banayein, usko apne ID card se verify karein, aur phir P2P trading ke zariye dollars khareed kar apne Trust Wallet mein transfer karein.\n- **Faida:** Aapko dollars market rate par, yaani taqreeban 285-290 PKR ka ek dollar mil sakta hai. Yeh sab se sasta tareeka hai.\n- **Nuqsan:** Is process mein aapka ID card zaroori hai, verification mein 1 se 2 din lag sakte hain, aur agar aap naye hain toh ghalti ka imkaan ho sakta hai.\n\n**Option 2: Hamari Official Team Se Khareedein (Thora Mehenga, Lekin 100% Aasan aur Mehfooz)**\n\n- **Tareeka:** Main aapko hamari 'Official Dollar Exchange Team' ke WhatsApp group ka link de rahi hoon. Aap unse direct rabta kar ke EasyPaisa/JazzCash ke zariye 5 minute mein dollars apne wallet mein mangwa sakte hain.\n- **Faida:** ID card ki zaroorat nahi, koi lambi verification nahi, aur 100% fraud-free hone ki guarantee hai. Hamari team aapko har qadam par guide bhi karegi.\n- **Nuqsan:** Yahan aapko dollar thora mehenga, yaani taqreeban 300-305 PKR ka ek milay ga, kyunke team aapko fori service faraham karti hai.\n\nMera mashwara hai ke agar aap naye hain aur kisi bhi qisam ki pareshani se bachna chahte hain, toh **Option 2** aapke liye behtareen hai. Aap batayein, aap kaunsa option chunna chahenge?",
+      "option_2_instructions": "Zabardast faisla! Option 2 sabse aasan aur mehfooz hai. Neeche diye gaye link se hamari 'Official Exchange Team' ka WhatsApp group join karein:\n\n🔗 **Group Link:** https://chat.whatsapp.com/Bv20EzpILRuJihD1IFy5e0\n\n**Group Join Karne Ke Baad Ki Hidayat:**\n1.  Group mein jo 'Admin' hain, unka number apne mobile mein save karein.\n2.  Number save karne ke baad, unko WhatsApp par unke naam ka screenshot bhejein aur apna naam batayein. (Yeh zaroori hai, iske baghair woh jawab nahi denge).\n3.  Unko batayein ke aapko 'Level {final_plan_level}' ke liye dollars chahiye.\n4.  Unke kehne par, unko apne Trust Wallet ke home page ka screenshot bhejein taake woh setting check kar lein.\n5.  Phir unse payment ki detail lein, payment karein, aur 5 minute mein dollars aapke wallet mein honge.\n\nJab aapke wallet mein dollars aa jayein, toh mujhe yahan aa kar 'Dollars aa gaye hain' ka message karein. Phir hum registration ka aakhri qadam uthayenge. Main aapka intezar kar rahi hoon."
+    }
+  },
+  "referral_engine": {
+    "initial_query": "Bohat khoob! Ab hum registration ke aakhri marhalay mein hain. Iske liye, mujhe aapke 'Referrer' (jisne aapko yahan bheja hai) ki tasdeeq (verification) karni hogi. Yeh aapki apni hifazat ke liye hai taake aap kisi ghalat team mein na chale jayein.\n\nPlease mujhe batayein, aap hamare paas kaise pohnche? (e.g., Facebook post, WhatsApp group, ya kisi dost ke zariye). Phir main aapko bataungi ke aapne unse unki 'Referral Link' aur 'System Name' kaise lena hai.",
+    "link_and_name_query": "Theek hai. Ab aap us shakhs se rabta karein aur unse unki 'Referral Link' aur unka woh 'Naam' lein jis se woh system mein register hain. Jab aapko yeh dono cheezein mil jayein, toh mujhe yahan bhejein. Main intezar kar rahi hoon.",
+    "verification_success_intro": "Masha'Allah! Bohat bohat mubarak ho! Aap ka bataya hua naam aur referral link hamare system mein tasdeeq ho gaya hai. Aap yaqeenan ek khush-qismat insaan hain ke aap ko in ke zariye hamare system tak rasai mili. Main aap ko in ke baare mein kuch batati hoon... ✨",
+    "verification_failure_intro": "Oh! Main maazrat chahti hoon... Aap ne jo naam aur referral link bataya hai, woh hamare system mein mojood nahin hai. 😟",
+    "failure_solution_offer": "Please pareshan na hon. Ho sakta hai ke aap ko batane wale se koi ghalti hui ho, ya phir (Allah na kare) woh koi fake shakhs ho. Main aapko hargiz kisi ghair-tasdeeq-shuda (unverified) shakhs ke sath join nahi karwa sakti. Lekin mere paas aapke liye ek zabardast hal hai. Main aapko direct is system ke 'Creator' aur 'Founder', Sir Jigar Shahzad, ke sath join karwa sakti hoon. Is se behtar aur mehfooz raasta koi nahi. Kya aap tayyar hain?",
+    "final_instructions": "Ab aap neeche di gayi video ko ghaur se dekhein. Ismein registration ka poora tareeka bataya gaya hai. Video ke mutabiq, apne senior ki di hui link se registration mukammal karein. Jab aapki registration ho jaye, toh mujhe yahan aa kar 'Registration ho gayi hai' ka message karein. Phir main aapko training groups mein shaamil karwaungi.\n\n🔗 **Registration Video:** https://youtu.be/uuwYaqSjNMY?si=VGCZrS96l8-lPk30",
+    "leaders": [
+      {
+        "id": 1,
+        "name": "Jigar Shahzad",
+        "link": "https://www.lifechangeeasy.io/register/ref/1",
+        "motivation_story": "Aap ne us shakhs ka intekhab kiya hai jo is poore inqilabi system ke khaliq (creator) hain - Sir Jigar Shahzad! Yeh sirf ek developer nahin, yeh ek vision hain. In ke sath judne ka matlab hai direct kamyabi ke sarchashme se judna. Aap ki qismat waqai buland hai."
+      },
+      {
+        "id": 2,
+        "name": "Dua Shahzadi",
+        "link": "https://www.lifechangeeasy.io/register/ref/2",
+        "motivation_story": "Dua Shahzadi! Masha'Allah, aap ek bohat hi qabil aur mehnati leader ki team mein aaye hain. In ki sab se bari khoobi in ka apni team ke sath mukhlis (sincere) hona hai. Yeh mahana 1 se 2 lakh rupaye tak aasani se kamati hain aur in ki team ke log bhi 50,000 se 1 lakh tak kama rahe hain. Aap ek achi ustaad ke paas aaye hain."
+      },
+      {
+        "id": 16,
+        "name": "Shehla",
+        "link": "https://www.lifechangeeasy.io/register/ref/16",
+        "motivation_story": "Shehla! Yeh hamari team ki ek bohat hi mustaqil-mizaj aur pur-azm leader hain. In ki misaal us khamosh samandar ki tarah hai jo bohat gehra hota hai. Yeh dikhawe par yaqeen nahin rakhtin, balke apne kaam se apni qabliyat sabit karti hain. Agar aap sanjeedgi se kaam kar ke mahana 1.5 lakh tak kamana chahte hain, to aap bilkul sahi jagah par hain."
+      },
+      {
+        "id": 20,
+        "name": "Romi khan",
+        "link": "https://www.lifechangeeasy.io/register/ref/20",
+        "motivation_story": "Romi Khan! Yeh naam hamare system mein josh aur junoon ki alamat hai. Yeh pehle ek choti si private job karte thay jahan un ki tankhah sirf 25,000 thi. Aaj, Alhumdulillah, yeh 'lifechangeeasy.io' se mahana 2 se 3 lakh rupaye tak kama rahe hain. Aap ek aisi shakhsiyat se jude hain jo aap ko kabhi himmat harne nahin denge."
+      },
+      {
+        "id": 15,
+        "name": "Mr Siddique",
+        "link": "https://www.lifechangeeasy.io/register/ref/15",
+        "motivation_story": "Mr. Siddique! Aap hamari team ke ek bohat hi ba-waqar aur sanjeeda leader ke paas aaye hain. In ki umar aur tajurba in ki sab se bari taqat hai. Yeh nojawano ko na sirf online earning sikhate hain, balke unhein zindagi guzarne ke sunehri usool bhi sikhate hain. Aap ek mehfooz aur shafqat bharay saaye mein aa gaye hain."
+      },
+      {
+        "id": 21,
+        "name": "Muhammad Adnan ijaz",
+        "link": "https://www.lifechangeeasy.io/register/ref/21",
+        "motivation_story": "Muhammad Adnan Ijaz hamari team ke 'silent worker' hain. Yeh zyada bolte nahin, in ka kaam bolta hai. In ki team mein shaamil log bohat tezi se grow karte hain kyun ke yeh unhein kaam karne ke anokhe 'shortcuts' aur techniques sikhate hain. Aap bilkul sahi ustaad ke paas aaye hain."
+      },
+      {
+        "id": 24,
+        "name": "Nizam Deen Qasmani",
+        "link": "https://www.lifechangeeasy.io/register/ref/24",
+        "motivation_story": "Nizam Deen Qasmani sahab hamari team ke ek bohat hi mukhlis aur deen-dar sathi hain. In ke kaam mein barkat hai kyun ke yeh hamesha sachai aur imandari se kaam karte hain. In ke sath jud kar aap na sirf apni duniya, balke apni aakhirat bhi sanwaar sakte hain."
+      },
+      {
+        "id": 25,
+        "name": "Basit Ali",
+        "link": "https://www.lifechangeeasy.io/register/ref/25",
+        "motivation_story": "Basit Ali! Yeh naam hai energy aur positivity ka. Yeh ek student thay jo apni pocket money ke liye pareshan rehte thay. Aaj Alhumdulillah, yeh na sirf apne taleemi akhrajat khud uthate hain, balke apne ghar walon ko bhi support kar rahe hain. Yeh khaas tor par students ke liye ek behtareen misaal hain."
+      },
+      {
+        "id": 28,
+        "name": "Imran Ali",
+        "link": "https://www.lifechangeeasy.io/register/ref/28",
+        "motivation_story": "Imran Ali hamari team ke 'problem solver' hain. In ke paas har masle ka hal hota hai. In ki team kabhi bhi kisi rukawat mein nahin phansti kyun ke yeh hamesha un ki madad ke liye mojood rehte hain. In ki mahana income 2.5 lakh se bhi zyada hai. Aap ek aise leader se jude hain jo aap ko kabhi akela nahin chhorega."
+      },
+      {
+        "id": 29,
+        "name": "Muhammad Waqas",
+        "link": "https://www.lifechangeeasy.io/register/ref/29",
+        "motivation_story": "Muhammad Waqas! Yeh hamare system ke 'technical expert' hain. Inhein blockchain, crypto, aur online marketing ki bohat gehri samajh hai. Yeh apni team ko professional level ki training dete hain. Agar aap is kaam ko ek hunar (skill) ke taur par seekhna chahte hain, to aap behtareen jagah par hain."
+      },
+      {
+        "id": 31,
+        "name": "Asif Ali",
+        "link": "https://www.lifechangeeasy.io/register/ref/31",
+        "motivation_story": "Asif Ali hamari team ke sab se purane aur tajurba-kar leaders mein se ek hain. Inhon ne is system ke tamam utaar-charhao dekhe hain. In ka tajurba ek khazane ki tarah hai. Yeh aap ko woh ghaltiyan karne se bachayenge jo naye log aksar karte hain. Aap apni kamyabi ko mehfooz karne ja rahe hain."
+      },
+      {
+        "id": 34,
+        "name": "Adil",
+        "link": "https://www.lifechangeeasy.io/register/ref/34",
+        "motivation_story": "Adil! Yeh hamari team ke 'marketing guru' hain. Inhein Facebook, TikTok, aur social media par promotion karne mein kamaal haasil hai. Yeh aap ko sikhayenge ke aap kaise ghar baithe hazaron logon tak apna paigham pohncha sakte hain. Aap marketing ke baadshah ke paas aaye hain."
+      },
+      {
+        "id": 39,
+        "name": "Moshin Abbas",
+        "link": "https://www.lifechangeeasy.io/register/ref/39",
+        "motivation_story": "Moshin Abbas! Allahu Akbar! Aap us naujawan ke paas aaye hain jis ki kamyabi ki kahani sun kar aqal dang reh jaati hai. Yeh larka ek factory mein 12,000 rupaye mahana par kaam karta tha. Aaj is system ki barkat se, yeh kabhi kabhi ek din ka 12,000 bhi kama leta hai. Aap ek zinda misaal se judne ja rahe hain."
+      },
+      {
+        "id": 45,
+        "name": "Muhammad Irfan",
+        "link": "https://www.lifechangeeasy.io/register/ref/45",
+        "motivation_story": "Muhammad Irfan hamari team ke sab se zyada mehnat karne wale leader hain. In ki kamyabi ka raaz sirf ek hai: 'Mehnat, Mehnat, aur Mehnat'. Yeh rozana 12 se 14 ghante kaam karte hain aur aaj mahana 4 lakh se zyada kama rahe hain. Yeh un logon ke liye misaal hain jo mehnat par yaqeen rakhte hain."
+      },
+      {
+        "id": 56,
+        "name": "Abdul Waris",
+        "link": "https://www.lifechangeeasy.io/register/ref/56",
+        "motivation_story": "Abdul Waris! Subhan'Allah! Aap us great leader ke paas aaye hain jo hamare system ka fakhar hain. Yeh shakhs kuch arsa pehle ek security guard ki mamooli naukri karte thay. Aaj yeh mahana 3 se 5 lakh rupaye tak kama rahe hain. Inhon ne na sirf apni zindagi badli, balke apni team mein darjanon logon ko lakh-pati banaya hai. Aap us heere ke paas aaye hain jo pathar ko tarashna janta hai."
+      },
+      {
+        "id": 42,
+        "name": "Arman Ali",
+        "link": "https://www.lifechangeeasy.io/register/ref/42",
+        "motivation_story": "Arman Ali! Yeh naam hai khawabon ka. Yeh shakhs ek chotay se gaon se uth kar aaj sheher mein apne zaati ghar aur gaari ke malik hain, sirf 'lifechangeeasy.io' ki badaulat. In ki kahani har us insaan ke liye umeed hai jo apni ghurbat se tang aa chuka hai. Aap ek aise shakhs se jude hain jo aap ko khawab dekhna aur unhein poora karna sikhayega."
+      },
+      {
+        "id": 14,
+        "name": "Sharyar",
+        "link": "https://www.lifechangeeasy.io/register/ref/14",
+        "motivation_story": "Sharyar hamari team ke 'strategist' hain. Yeh hamesha 10 qadam aagay ka sochte hain. In ki planning bohat solid hoti hai. In ki team hamesha market mein sab se aagay rehti hai. Agar aap ek leader banna chahte hain aur apni team banana chahte hain, to in se behtar koi nahin sikha sakta."
+      },
+      {
+        "id": 51,
+        "name": "Muhammad Soomar",
+        "link": "https://www.lifechangeeasy.io/register/ref/51",
+        "motivation_story": "Muhammad Soomar sahab hamari team ke ek bohat hi naram-dil aur khush-ikhlaq leader hain. In ki team mein har banda khush rehta hai kyun ke yeh har kisi se doston jaisa sulook karte hain. Yeh kehte hain ke 'paisa to har koi kama leta hai, asal cheez izzat aur muhabbat kamana hai'. Aap ek behtareen insaan ke paas aaye hain."
+      }
+    ]
+  },
+  "training_and_support": {
+    "purpose": "User ko registration ke baad mubarakbad dena aur training ke liye guide karna.",
+    "welcome_message": "Masha'Allah! Bohat bohat mubarak ho, {user_name} ji! Aap 'lifechangeeasy.io' ki kamyab family ka hissa ban chuke hain. Yeh sirf ek registration nahi, yeh aapki behtar zindagi, aapke khawabon, aur aapki maali azadi ki taraf pehla, sabse ahem qadam hai. Main aapko teh-e-dil se khush amdeed kehti hoon. Welcome to the team of achievers! 🚀",
+    "training_instructions": "Ab aapka agla safar 'Seekhne' (Learning) ka hai. Main aapko ab hamari 'Official Training & Support Team' ke paas bhej rahi hoon. Yeh woh log hain jinhon ne hazaron logon ko zero se hero banaya hai. Yahi aapko har qadam par sikhayenge aur aapko kamyab karenge.\n\nNeeche diye gaye WhatsApp group ko foran join karein:\n\n🔗 **Training Group Link:** https://chat.whatsapp.com/Bv20EzpILRuJihD1IFy5e0\n\n**Group Join Karne Ke Baad Ki Hidayat:**\n1.  Group mein jo 'Admin' online hain, unka number apne mobile mein save karein.\n2.  Unko WhatsApp par unke number save karne ka screenshot bhejein aur apna naam batayein. (Yeh lazmi hai).\n3.  Unko apne naye 'lifechangeeasy.io' account ka screenshot bhejein.\n4.  Unko apne senior (jiski link se aapne join kiya) ka naam batayein.\n\nIske baad, woh aapko hamare 'Secret Training Groups' mein add kar denge jahan aapki professional training shuru hogi. Aapki salary aaj se hi shuru ho chuki hai. Kamyabi aapka intezar kar rahi hai!"
+  },
+  "help_desk": {
+    "purpose": "Kisi bhi masle ki soorat mein user ko fori madad faraham karna.",
+    "content": "Agar aapko registration ke dauran, dollar khareedte waqt, ya kisi bhi aur marhalay par koi masla aa raha hai ya koi cheez samajh nahi aa rahi, toh aap bilkul pareshan na hon. Aap hamari 'Official Support Team' se fori madad le sakte hain.\n\nNeeche diye gaye WhatsApp group ko join karein:\n\n🔗 **Support Group Link:** https://chat.whatsapp.com/Bv20EzpILRuJihD1IFy5e0\n\n**Madad Lene Ka Tareeka:**\n1.  Group mein jo 'Admin' online hain, unka number apne mobile mein save karein.\n2.  Unko number save karne ka screenshot bhejein aur apna naam batayein.\n3.  Uske baad, unko apne masle ka screenshot ya detail bhejein. Woh foran aapki madad karenge. Hamari team 24 ghante aapki madad ke liye hazir hai."
+  }
+}
+

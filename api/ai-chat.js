@@ -1,4 +1,4 @@
-// ai-chat.js (v14.0) - FIXED Deployment Crash & All Previous Errors
+// ai-chat.js (v15.0) - FINAL ROBUST VERSION
 
 const express = require('express');
 const admin = require('firebase-admin');
@@ -6,12 +6,38 @@ const { Polly } = require('@aws-sdk/client-polly');
 const { getMasterPrompt } = require('./system_prompts.js');
 const { loadTrainingData } = require('./agent_memory.js');
 
+// --- STARTUP CHECK: Verify all environment variables are present ---
+const requiredEnvVars = [
+    'FIREBASE_SERVICE_ACCOUNT_KEY',
+    'AWS_REGION',
+    'AWS_ACCESS_KEY_ID',
+    'AWS_SECRET_ACCESS_KEY',
+    'GEMINI_API_KEY'
+];
+
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+    console.error('FATAL ERROR: The following required environment variables are not set:');
+    console.error(missingVars.join('\n'));
+    console.error('Please set them in your hosting provider (Render.com) and restart the server.');
+    process.exit(1); // Stop the server from starting
+}
+// --- END OF STARTUP CHECK ---
+
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
 // --- Firebase Initialization ---
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+let serviceAccount;
+try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+} catch (e) {
+    console.error('FATAL ERROR: FIREBASE_SERVICE_ACCOUNT_KEY is not a valid JSON object.');
+    process.exit(1);
+}
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://jigar-team-chatbot-default-rtdb.firebaseio.com"
@@ -39,6 +65,7 @@ try {
 
 // --- API Endpoint to Handle Chat ---
 app.post('/api/chat', async (req, res) => {
+    // ... (rest of the code is the same as v14.0 and is correct) ...
     const { userId, userQuery, fullChatHistory } = req.body;
 
     if (!userId || !userQuery) {
@@ -94,7 +121,6 @@ app.post('/api/chat', async (req, res) => {
 
         const data = await apiResponse.json();
         
-        // --- FIX: Replaced modern syntax with universally compatible code ---
         let aiResponseText;
         if (data && data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0 && data.candidates[0].content.parts[0].text) {
             aiResponseText = data.candidates[0].content.parts[0].text;
@@ -102,7 +128,6 @@ app.post('/api/chat', async (req, res) => {
             console.error("Invalid response structure from Google API:", JSON.stringify(data, null, 2));
             throw new Error('Failed to extract AI response from Google API.');
         }
-        // --- END OF FIX ---
         
         const pollyParams = {
             Engine: 'neural',
@@ -145,4 +170,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-  

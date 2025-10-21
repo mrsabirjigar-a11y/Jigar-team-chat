@@ -1,156 +1,176 @@
-// FINAL & GUARANTEED v11.0: ai-chat.js (Correct & Direct Google API Call)
+// ai-chat.js (v13.0) - Corrected Model Name & Payload Format
 
 const express = require('express');
-const cors = require('cors');
 const admin = require('firebase-admin');
-const { getMasterPrompt } = require('./system_prompts');
-const { loadTrainingData } = require('./agent_memory'); 
+const { Polly } = require('@aws-sdk/client-polly');
+const { getMasterPrompt } = require('./system_prompts.js');
+const { loadTrainingData } = require('./agent_memory.js');
 
-// === INITIALIZATION ===
-let ragDocuments;
-try {
-    console.log("Initializing application...");
-    const serviceAccountPath = '/etc/secrets/firebase_credentials.json';
-    const serviceAccount = JSON.parse(require('fs').readFileSync(serviceAccountPath, 'utf8'));
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: "https://life-change-easy-default-rtdb.firebaseio.com"
-    });
-    console.log("✅ Firebase Yaddasht (Memory) Connected!");
-    ragDocuments = loadTrainingData();
-} catch (error) {
-    console.error("❌ CRITICAL INITIALIZATION FAILED:", error.message);
-    process.exit(1);
-}
+const app = express();
+app.use(express.json());
+app.use(express.static('public')); // Serve static files like index.html
 
+// --- Firebase Initialization ---
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://jigar-team-chatbot-default-rtdb.firebaseio.com"
+});
 const db = admin.database();
 
-// === EXPRESS APP SETUP ===
-const app = express();
-const port = process.env.PORT || 10000;
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-
-// === AUDIO GENERATION FUNCTION (Mukammal Code) ===
-async function generateAudio(text) {
-    console.log("[generateAudio] Attempting to generate audio...");
-    try {
-        const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
-        const AWS_ACCESS_KEY_ID = process.env.MY_AWS_ACCESS_KEY_ID;
-        const AWS_SECRET_ACCESS_KEY = process.env.MY_AWS_SECRET_ACCESS_KEY;
-        const AWS_REGION = process.env.MY_AWS_REGION;
-        if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_REGION) {
-            console.warn("[generateAudio] AWS credentials not found. Skipping audio generation.");
-            return null;
-        }
-        const pollyClient = new PollyClient({ region: AWS_REGION, credentials: { accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY } });
-        const params = { Text: text, OutputFormat: "mp3", VoiceId: "Kajal", Engine: "neural", LanguageCode: "hi-IN" };
-        const command = new SynthesizeSpeechCommand(params);
-        const { AudioStream } = await pollyClient.send(command);
-        const chunks = [];
-        for await (const chunk of AudioStream) { chunks.push(chunk); }
-        const buffer = Buffer.concat(chunks);
-        console.log("[generateAudio] Audio generated successfully.");
-        return `data:audio/mpeg;base64,${buffer.toString("base64")}`;
-    } catch (error) {
-        console.error("❌ [generateAudio] Audio Generation FAILED:", error.message);
-        return null; 
+// --- AWS Polly Initialization ---
+const pollyClient = new Polly({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     }
+});
+
+// --- RAG Training Data Loading ---
+let ragDocuments = {};
+try {
+    ragDocuments = loadTrainingData();
+    console.log("RAG training data loaded successfully.");
+} catch (error) {
+    console.error("Fatal Error: Could not load RAG training data.", error);
+    process.exit(1); // Exit if training data fails to load
 }
 
-// === FINAL, GUARANTEED GOOGLE API 'callAI' FUNCTION (v11.0) ===
-async function callAI(userId, userMessage, chatHistory) {
-    console.log(`[${userId}] Starting Guaranteed Google API call for: "${userMessage}"`);
+// --- API Endpoint to Handle Chat ---
+app.post('/api/chat', async (req, res) => {
+    const { userId, userQuery, fullChatHistory } = req.body;
 
-    const userMessageWords = userMessage.toLowerCase().split(' ');
-    const topDocuments = ragDocuments.filter(doc => {
-        const promptWords = doc.prompt.toLowerCase().split(' ');
-        return promptWords.some(word => userMessageWords.includes(word));
-    }).slice(0, 10);
-
-    console.log(`[${userId}] Found ${topDocuments.length} relevant documents.`);
-    
-    // === YAHAN WOH FINAL FIX HAI ===
-    // Hum ne 'userQuery' ko yahan se hata diya hai, kyunke uski zaroorat nahi.
-    const systemInstruction = getMasterPrompt(topDocuments, chatHistory);
-
-    const contents = chatHistory.map(turn => ({
-        role: turn.role.toLowerCase(),
-        parts: [{ text: turn.message }]
-    }));
-    contents.push({ role: "user", parts: [{ text: userMessage }] });
-
-    const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GOOGLE_API_KEY}`;
-
-    const body = {
-        contents: contents,
-        systemInstruction: {
-            parts: [{ text: systemInstruction }]
-        }
-    };
-
-    const apiResponse = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-
-    if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
-        console.error("Google API Error Body:", errorText);
-        throw new Error(`Google API call failed: ${apiResponse.statusText}`);
+    if (!userId || !userQuery) {
+        return res.status(400).json({ error: 'userId and userQuery are required.' });
     }
-
-    const responseData = await apiResponse.json();
-    
-    if (!responseData.candidates || !responseData.candidates[0].content || !responseData.candidates[0].content.parts[0].text) {
-        console.error("Invalid response structure from Google API:", responseData);
-        throw new Error("AI returned an invalid response structure.");
-    }
-    
-    const responseText = responseData.candidates[0].content.parts[0].text;
-
-    console.log(`[${userId}] Google API response generated successfully.`);
-    return responseText;
-}
-
-// === MAIN ROUTE HANDLER (Mukammal Code) ===
-app.post('/', async (req, res) => {
-    const { userId, message } = req.body;
-    if (!userId || !message) {
-        return res.status(400).json({ error: "User ID and message are required." });
-    }
-
-    console.log(`\n--- [${userId}] New Request --- Message: "${message}" ---`);
 
     try {
-        const userRef = db.ref(`chat_users/${userId}`);
-        const snapshot = await userRef.once('value');
-        const userData = snapshot.val() || { chat_history: [] };
+        // 1. Get Master Prompt (System Instructions)
+        const masterPrompt = getMasterPrompt(ragDocuments, fullChatHistory);
 
-        if (!userData.chat_history) {
-            userData.chat_history = [];
-        }
-
-        const responseText = await callAI(userId, message, userData.chat_history);
+        // 2. Construct the payload for Google Gemini API
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
         
-        const audioUrl = await generateAudio(responseText);
+        // --- FIX: CORRECTED MODEL NAME IN THE URL ---
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
 
-        userData.chat_history.push({ role: "user", message: message });
-        userData.chat_history.push({ role: "model", message: responseText });
-        await userRef.set(userData);
-        console.log(`[${userId}] Firebase history updated.`);
+        // --- CORRECTED CONTENTS CONSTRUCTION ---
+        const contents = [];
 
-        res.status(200).json({ reply: responseText, audioUrl: audioUrl });
+        // Add the master prompt first
+        contents.push({
+            role: "user",
+            parts: [{ text: masterPrompt }]
+        });
+        // Add a placeholder model response to establish the conversation flow
+        contents.push({
+            role: "model",
+            parts: [{ text: "Jee, mai Jigar Team ki AI assistant hu. Mai aapki kya sahayata kar sakti hu?" }]
+        });
+
+        // Add the actual chat history in the correct format
+        if (Array.isArray(fullChatHistory)) {
+            fullChatHistory.forEach(message => {
+                const role = message.role === 'user' ? 'user' : 'model';
+                contents.push({
+                    role: role,
+                    parts: [{ text: message.content }]
+                });
+            });
+        }
+        
+        // Finally, add the latest user query
+        contents.push({
+            role: "user",
+            parts: [{ text: userQuery }]
+        });
+        // --- END OF CORRECTION ---
+
+        const payload = {
+            contents: contents,
+            generationConfig: {
+                temperature: 0.7,
+                topP: 1,
+                topK: 1,
+                maxOutputTokens: 2048,
+            },
+            safetySettings: [
+                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            ]
+        };
+        
+        // 3. Call Google Gemini API
+        const fetch = (await import('node-fetch')).default;
+        const apiResponse = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!apiResponse.ok) {
+            const errorText = await apiResponse.text();
+            console.error('Google API Error Response:', errorText);
+            throw new Error(`Google API request failed with status ${apiResponse.status}: ${errorText}`);
+        }
+
+        const data = await apiResponse.json();
+        
+        // 4. Extract AI Response
+        let aiResponseText;
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            aiResponseText = data.candidates[0].content.parts[0].text;
+        } else {
+            console.error("Invalid response structure from Google API:", JSON.stringify(data, null, 2));
+            throw new Error('Failed to extract AI response from Google API.');
+        }
+        
+        // 5. Generate Audio with AWS Polly
+        const pollyParams = {
+            Engine: 'neural',
+            OutputFormat: 'mp3',
+            Text: aiResponseText,
+            VoiceId: 'Kajal',
+            LanguageCode: 'hi-IN'
+        };
+        const audioStream = (await pollyClient.synthesizeSpeech(pollyParams)).AudioStream;
+        const audioBuffer = await streamToBuffer(audioStream);
+        const audioBase64 = audioBuffer.toString('base64');
+
+        // 6. Save to Firebase and respond to client
+        const userMessageRef = db.ref(`chats/${userId}`).push();
+        await userMessageRef.set({ role: 'user', content: userQuery, timestamp: Date.now() });
+
+        const aiMessageRef = db.ref(`chats/${userId}`).push();
+        await aiMessageRef.set({ role: 'model', content: aiResponseText, timestamp: Date.now() });
+
+        res.json({
+            aiResponse: aiResponseText,
+            audioData: audioBase64
+        });
 
     } catch (error) {
-        console.error(`[${userId}] XXX A FATAL ERROR OCCURRED:`, error);
-        res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
+        console.error('Error in /api/chat:', error);
+        res.status(500).json({ error: 'An internal server error occurred. Please check server logs.' });
     }
 });
 
-// === SERVER START ===
-app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v11.0 (Guaranteed) is running on port ${port}`);
+// Helper function to convert stream to buffer
+function streamToBuffer(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('error', reject);
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+    });
+}
+
+// --- Server Start ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
+    

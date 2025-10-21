@@ -1,6 +1,6 @@
-// FINAL PROMPT v5.0: system_prompts.js (Guaranteed for Google)
+// FINAL PROMPT v6.0: system_prompts.js (Guaranteed for Google)
 
-function getMasterPrompt(ragDocuments, userQuery, chatHistory) {
+function getMasterPrompt(ragDocuments, chatHistory) { // <-- Yahan se 'userQuery' hata diya hai
     const documentsText = ragDocuments.map(
         (doc, index) => `DOCUMENT ${index + 1} (Example of a good answer):\nUser might ask: "${doc.prompt}"\nIn that case, a good response would be: "${doc.completion}"`
     ).join('\n\n');

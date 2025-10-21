@@ -110,9 +110,8 @@ async function callAI(userId, userMessage, chatHistory) {
 }
 
 
-// === MAIN ROUTE HANDLER (Waisa hi hai) ===
+// === MAIN ROUTE HANDLER (With Final Fix) ===
 app.post('/', async (req, res) => {
-    // ... (Is mein koi tabdeeli nahi)
     const { userId, message } = req.body;
     if (!userId || !message) {
         return res.status(400).json({ error: "User ID and message are required." });
@@ -124,6 +123,12 @@ app.post('/', async (req, res) => {
         const userRef = db.ref(`chat_users/${userId}`);
         const snapshot = await userRef.once('value');
         const userData = snapshot.val() || { chat_history: [] };
+
+        // === YAHAN WOH FINAL FIX HAI ===
+        if (!userData.chat_history) {
+            userData.chat_history = [];
+        }
+        // ===============================
 
         const responseText = await callAI(userId, message, userData.chat_history);
         
@@ -141,6 +146,7 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: "Maazrat, AI agent mein ek andruni ghalti hogayi hai." });
     }
 });
+
 
 // === SERVER START ===
 app.listen(port, () => {

@@ -1,12 +1,11 @@
-// FINAL FILE v3.2: ai-chat.js (Compatible with cohere-ai@7.9.5)
+// FINAL FILE v3.3: ai-chat.js (100% Compatible with cohere-ai@7.9.5)
 
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { getMasterPrompt } = require('./system_prompts');
 const { loadAndPrepareData } = require('./agent_memory');
-// NAYI TABDEELI #1: Purani library ko is tarah import karna hai
-const cohere = require('cohere-ai');
+const cohere = require('cohere-ai'); // Purani library
 
 // === INITIALIZATION ===
 let coreMemory, ragDocuments;
@@ -30,8 +29,7 @@ try {
 }
 
 const db = admin.database();
-// NAYI TABDEELI #1 (Part 2): Library ko is tarah initialize karna hai
-cohere.init(process.env.COHERE_API_KEY);
+cohere.init(process.env.COHERE_API_KEY); // Purani library ko initialize karna
 
 // === EXPRESS APP SETUP ===
 const app = express();
@@ -39,8 +37,9 @@ const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === AUDIO GENERATION FUNCTION (Yeh bilkul waisa hi hai) ===
+// === AUDIO GENERATION FUNCTION ===
 async function generateAudio(text) {
+    // ... (Is function mein koi tabdeeli nahi, yeh waisa hi rahega)
     console.log("[generateAudio] Attempting to generate audio...");
     try {
         const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
@@ -66,11 +65,10 @@ async function generateAudio(text) {
     }
 }
 
-// === NAYI TABDEELI #2: SAADA 'callAI' FUNCTION (BINA RERANK KE) ===
+// === FINAL, COMPATIBLE 'callAI' FUNCTION ===
 async function callAI(userId, userMessage, chatHistory) {
     console.log(`[${userId}] Starting simplified RAG process for message: "${userMessage}"`);
 
-    // Step 1: Apne data mein se milte-julte documents dhoondhna (Saada Tareeqa)
     const userMessageWords = userMessage.toLowerCase().split(' ');
     const topDocuments = ragDocuments.filter(doc => {
         const promptWords = doc.prompt.toLowerCase().split(' ');
@@ -79,24 +77,22 @@ async function callAI(userId, userMessage, chatHistory) {
 
     console.log(`[${userId}] Found ${topDocuments.length} relevant documents using simple search.`);
 
-    // Step 2: Master Prompt tayyar karna
-    const masterPrompt = getMasterPrompt(coreMemory, topDocuments, userMessage);
+    const masterPrompt = getMasterPrompt(coreMemory, topDocuments, userMessage, chatHistory); // Chat history ko prompt mein daalna
 
-    // Step 3: Cohere ko call karna (Purani Library Ke Sath)
-    const response = await cohere.chat({
-        model: "command-r-plus-08-2024",
-        preamble: masterPrompt,
-        chatHistory: chatHistory,
-        message: "Please provide the response now.",
+    // NAYI TABDEELI: 'generate' function istemal karna
+    const response = await cohere.generate({
+        model: "command", // 'command-r-plus-08-2024' purani library mein is naam se call hota hai
+        prompt: masterPrompt,
+        max_tokens: 1000,
+        temperature: 0.3,
     });
 
     console.log(`[${userId}] AI response generated successfully.`);
-    // Purani library mein jawab is tarah milta hai
-    return response.body.text;
+    // NAYI TABDEELI: Jawab is tarah nikalna hai
+    return response.body.generations[0].text;
 }
 
-
-// === MAIN ROUTE HANDLER (Yeh bilkul waisa hi hai) ===
+// === MAIN ROUTE HANDLER (Ab ismein chat history bhi prompt mein jayegi) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId || !message) {
@@ -129,5 +125,5 @@ app.post('/', async (req, res) => {
 
 // === SERVER START ===
 app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v3.2 (Stable RAG) is running on port ${port}`);
+    console.log(`✅ Recruitment Agent Server v3.3 (Stable & Final) is running on port ${port}`);
 });

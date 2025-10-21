@@ -166,7 +166,9 @@ function streamToBuffer(stream) {
     });
 }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Is naye code ko PASTE karein
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is live and running on port ${PORT}`);
 });
+    

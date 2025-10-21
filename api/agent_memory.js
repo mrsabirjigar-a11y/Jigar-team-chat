@@ -5,7 +5,7 @@ const path = require('path');
 
 function loadTrainingData() {
     try {
-        const filePath = path.join(__dirname, 'knowledge_base.json');
+        const filePath = path.join(__dirname, 'training_data.jsonl');
         const fileContent = fs.readFileSync(filePath, 'utf8');
         return JSON.parse(fileContent);
     } catch (error) {

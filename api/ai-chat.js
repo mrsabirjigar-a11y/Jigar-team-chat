@@ -1,15 +1,13 @@
-// FINAL FILE v7.0: ai-chat.js (Pure RAG with Google Gemini)
+// FINAL & GUARANTEED v2.0: ai-chat.js (Direct Google API Call - Complete)
 
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
-// Naye, saaday imports
 const { getMasterPrompt } = require('./system_prompts');
 const { loadTrainingData } = require('./agent_memory'); 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // === INITIALIZATION ===
-let ragDocuments; // Sirf ragDocuments
+let ragDocuments;
 try {
     console.log("Initializing application...");
     const serviceAccountPath = '/etc/secrets/firebase_credentials.json';
@@ -19,26 +17,21 @@ try {
         databaseURL: "https://life-change-easy-default-rtdb.firebaseio.com"
     });
     console.log("✅ Firebase Yaddasht (Memory) Connected!");
-
-    // Sirf training data load karna
-    ragDocuments = loadTrainingData(); 
-
+    ragDocuments = loadTrainingData();
 } catch (error) {
     console.error("❌ CRITICAL INITIALIZATION FAILED:", error.message);
     process.exit(1);
 }
 
 const db = admin.database();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro"});
 
-// === EXPRESS APP SETUP (Waisa hi hai) ===
+// === EXPRESS APP SETUP ===
 const app = express();
 const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === AUDIO GENERATION FUNCTION (Waisa hi hai) ===
+// === AUDIO GENERATION FUNCTION (MUKAMMAL CODE) ===
 async function generateAudio(text) {
     console.log("[generateAudio] Attempting to generate audio...");
     try {
@@ -65,32 +58,58 @@ async function generateAudio(text) {
     }
 }
 
-// === FINAL, GOOGLE GEMINI 'callAI' FUNCTION (Without Core Memory) ===
+// === FINAL, DIRECT GOOGLE API 'callAI' FUNCTION ===
 async function callAI(userId, userMessage, chatHistory) {
-    console.log(`[${userId}] Starting Google Gemini RAG process for: "${userMessage}"`);
+    console.log(`[${userId}] Starting Direct Google API call for: "${userMessage}"`);
 
-    // Saada tareeqa relevant documents dhoondne ka
     const userMessageWords = userMessage.toLowerCase().split(' ');
     const topDocuments = ragDocuments.filter(doc => {
         const promptWords = doc.prompt.toLowerCase().split(' ');
         return promptWords.some(word => userMessageWords.includes(word));
-    }).slice(0, 10); // 10 sab se milti-julti examples uthana
+    }).slice(0, 10);
 
     console.log(`[${userId}] Found ${topDocuments.length} relevant documents.`);
-
-    // Master Prompt banana (bina coreMemory ke)
+    
     const masterPrompt = getMasterPrompt(topDocuments, userMessage, chatHistory);
 
-    // Google Gemini ko call karna
-    const result = await model.generateContent(masterPrompt);
-    const response = await result.response;
-    const responseText = response.text();
+    const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_API_KEY}`;
+
+    const body = {
+        contents: [{
+            parts: [{
+                text: masterPrompt
+            }]
+        }]
+    };
+
+    const apiResponse = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+
+    if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        console.error("Google API Error Body:", errorText);
+        throw new Error(`Google API call failed: ${apiResponse.statusText}`);
+    }
+
+    const responseData = await apiResponse.json();
     
-    console.log(`[${userId}] Google Gemini response generated successfully.`);
+    // Safety check agar response mein content na ho
+    if (!responseData.candidates || !responseData.candidates[0].content || !responseData.candidates[0].content.parts[0].text) {
+        console.error("Invalid response structure from Google API:", responseData);
+        throw new Error("AI returned an invalid response structure.");
+    }
+    
+    const responseText = responseData.candidates[0].content.parts[0].text;
+
+    console.log(`[${userId}] Google API response generated successfully.`);
     return responseText;
 }
 
-// === MAIN ROUTE HANDLER (Waisa hi hai) ===
+// === MAIN ROUTE HANDLER (MUKAMMAL CODE) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId || !message) {
@@ -125,8 +144,8 @@ app.post('/', async (req, res) => {
     }
 });
 
-// === SERVER START (Waisa hi hai) ===
+// === SERVER START ===
 app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v7.0 (Pure RAG - Google) is running on port ${port}`);
+    console.log(`✅ Recruitment Agent Server v8.1 (Direct Google API - Complete) is running on port ${port}`);
 });
-                
+        

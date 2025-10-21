@@ -1,4 +1,4 @@
-// FINAL & GUARANTEED v10.0: ai-chat.js (Correct & Direct Google API Call)
+// FINAL & GUARANTEED v11.0: ai-chat.js (Correct & Direct Google API Call)
 
 const express = require('express');
 const cors = require('cors');
@@ -58,7 +58,7 @@ async function generateAudio(text) {
     }
 }
 
-// === FINAL, GUARANTEED GOOGLE API 'callAI' FUNCTION ===
+// === FINAL, GUARANTEED GOOGLE API 'callAI' FUNCTION (v11.0) ===
 async function callAI(userId, userMessage, chatHistory) {
     console.log(`[${userId}] Starting Guaranteed Google API call for: "${userMessage}"`);
 
@@ -70,28 +70,23 @@ async function callAI(userId, userMessage, chatHistory) {
 
     console.log(`[${userId}] Found ${topDocuments.length} relevant documents.`);
     
-    // Yahan hum master prompt nahi, balke seedha system instruction bhejenge
-    const systemInstruction = getMasterPrompt(topDocuments, userQuery, chatHistory);
+    // === YAHAN WOH FINAL FIX HAI ===
+    // Hum ne 'userQuery' ko yahan se hata diya hai, kyunke uski zaroorat nahi.
+    const systemInstruction = getMasterPrompt(topDocuments, chatHistory);
 
-    // Google ke naye format ke mutabiq history banana
     const contents = chatHistory.map(turn => ({
-        role: turn.role.toLowerCase(), // 'user' ya 'model'
+        role: turn.role.toLowerCase(),
         parts: [{ text: turn.message }]
     }));
-    // Naya message add karna
     contents.push({ role: "user", parts: [{ text: userMessage }] });
 
-
     const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
-    // Naya aur Sahi API URL
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GOOGLE_API_KEY}`;
 
     const body = {
-        contents: contents, // Puri history yahan bhej rahe hain
-        systemInstruction: { // Master prompt yahan bhej rahe hain
-            parts: [{
-                text: systemInstruction
-            }]
+        contents: contents,
+        systemInstruction: {
+            parts: [{ text: systemInstruction }]
         }
     };
 
@@ -142,9 +137,8 @@ app.post('/', async (req, res) => {
         
         const audioUrl = await generateAudio(responseText);
 
-        // Firebase mein history update karte waqt role theek karna
         userData.chat_history.push({ role: "user", message: message });
-        userData.chat_history.push({ role: "model", message: responseText }); // 'CHATBOT' ke bajaye 'model'
+        userData.chat_history.push({ role: "model", message: responseText });
         await userRef.set(userData);
         console.log(`[${userId}] Firebase history updated.`);
 
@@ -158,5 +152,5 @@ app.post('/', async (req, res) => {
 
 // === SERVER START ===
 app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v10.0 (Guaranteed) is running on port ${port}`);
+    console.log(`✅ Recruitment Agent Server v11.0 (Guaranteed) is running on port ${port}`);
 });

@@ -2,15 +2,16 @@
   "name": "jigar-team-ai-chat",
   "version": "1.0.0",
   "description": "AI Chat with AWS Polly TTS",
-  "main": "index.js",
+  "main": "ai-chat.js",
   "scripts": {
+    "start": "node api/ai-chat.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-polly": "^3.525.0",
-    "cohere-ai": "^7.9.5",
+    "@google/generative-ai": "^0.11.3",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "firebase-admin": "^12.0.0"

@@ -1,32 +1,49 @@
-// FINAL FILE v4.0: agent_memory.js (Sirf Training Data)
+// agent_memory.js (FINAL, COMPATIBLE VERSION)
 
 const fs = require('fs');
 const path = require('path');
 
-/**
- * Yeh function ab sirf aapki training_data.jsonl file ko parh kar
- * usay AI ke RAG system ke liye tayyar karta hai.
- */
 function loadTrainingData() {
     try {
-        const trainingDataPath = path.join(__dirname, 'training_data.jsonl');
-        const trainingFileContent = fs.readFileSync(trainingDataPath, 'utf8');
-        
-        // Har line ko parh kar usay JSON object mein tabdeel karna
-        const trainingData = trainingFileContent.split('\n')
-            .filter(line => line.trim() !== '') // Khali lines ko ignore karna
-            .map(line => JSON.parse(line));
-
-        console.log(`✅ ${trainingData.length} training documents loaded successfully for RAG.`);
-        
-        return trainingData;
-
+        const filePath = path.join(__dirname, 'knowledge_base.json');
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(fileContent);
     } catch (error) {
-        console.error("❌ FAILED to load Training Data from training_data.jsonl:", error.message);
-        // Agar file na mile to khali array bhejein taake app crash na ho
-        return []; 
+        console.error("Fatal Error: Could not read or parse knowledge_base.json", error);
+        throw error; // Error ko aage bhejein taake server band ho jaye
     }
 }
 
-module.exports = { loadTrainingData };
-    
+function findRelevantDocuments(query, ragDocuments) {
+    if (!query || !ragDocuments || !Array.isArray(ragDocuments.documents)) {
+        return [];
+    }
+
+    const queryWords = query.toLowerCase().split(/\s+/);
+    const scoredDocs = ragDocuments.documents.map(function(doc) {
+        let score = 0;
+        const docContent = doc.content.toLowerCase();
+        queryWords.forEach(function(word) {
+            if (docContent.includes(word)) {
+                score++;
+            }
+        });
+        return { content: doc.content, score: score };
+    });
+
+    const relevantDocs = scoredDocs.filter(function(doc) {
+        return doc.score > 0;
+    });
+
+    relevantDocs.sort(function(a, b) {
+        return b.score - a.score;
+    });
+
+    // Sirf top 3 sabse relevant documents bhejein
+    return relevantDocs.slice(0, 3);
+}
+
+module.exports = {
+    loadTrainingData,
+    findRelevantDocuments
+};

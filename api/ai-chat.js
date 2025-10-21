@@ -80,7 +80,7 @@ async function callAI(userId, userMessage, chatHistory) {
     const masterPrompt = getMasterPrompt(coreMemory, topDocuments, userMessage);
 
     const response = await cohere.chat({
-        model: "command-r-plus-08-2024",
+        model: "command-r-plus",
         preamble: masterPrompt,
         chatHistory: chatHistory,
         message: "Please provide the response now.",

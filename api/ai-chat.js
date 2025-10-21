@@ -1,11 +1,12 @@
-// FINAL FILE: ai-chat.js (RAG Model with Audio Generation)
+// FINAL FILE v3.2: ai-chat.js (Compatible with cohere-ai@7.9.5)
 
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { getMasterPrompt } = require('./system_prompts');
 const { loadAndPrepareData } = require('./agent_memory');
-const { CohereClient } = require('cohere-ai');
+// NAYI TABDEELI #1: Purani library ko is tarah import karna hai
+const cohere = require('cohere-ai');
 
 // === INITIALIZATION ===
 let coreMemory, ragDocuments;
@@ -29,7 +30,8 @@ try {
 }
 
 const db = admin.database();
-const cohere = new CohereClient({ token: process.env.COHERE_API_KEY });
+// NAYI TABDEELI #1 (Part 2): Library ko is tarah initialize karna hai
+cohere.init(process.env.COHERE_API_KEY);
 
 // === EXPRESS APP SETUP ===
 const app = express();
@@ -37,7 +39,7 @@ const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === AUDIO GENERATION FUNCTION (Aapka Feature Wapis Aa Gaya) ===
+// === AUDIO GENERATION FUNCTION (Yeh bilkul waisa hi hai) ===
 async function generateAudio(text) {
     console.log("[generateAudio] Attempting to generate audio...");
     try {
@@ -64,33 +66,37 @@ async function generateAudio(text) {
     }
 }
 
-// === NAYA, RAG-ENABLED 'callAI' FUNCTION ===
+// === NAYI TABDEELI #2: SAADA 'callAI' FUNCTION (BINA RERANK KE) ===
 async function callAI(userId, userMessage, chatHistory) {
-    console.log(`[${userId}] Starting RAG process for message: "${userMessage}"`);
+    console.log(`[${userId}] Starting simplified RAG process for message: "${userMessage}"`);
 
-    const relevantDocs = await cohere.rerank({
-        model: 'rerank-english-v2.0',
-        query: userMessage,
-        documents: ragDocuments.map(d => d.prompt),
-        topN: 5,
-    });
-    console.log(`[${userId}] Found ${relevantDocs.results.length} relevant documents.`);
+    // Step 1: Apne data mein se milte-julte documents dhoondhna (Saada Tareeqa)
+    const userMessageWords = userMessage.toLowerCase().split(' ');
+    const topDocuments = ragDocuments.filter(doc => {
+        const promptWords = doc.prompt.toLowerCase().split(' ');
+        return promptWords.some(word => userMessageWords.includes(word));
+    }).slice(0, 5);
 
-    const topDocuments = relevantDocs.results.map(result => ragDocuments[result.index]);
+    console.log(`[${userId}] Found ${topDocuments.length} relevant documents using simple search.`);
+
+    // Step 2: Master Prompt tayyar karna
     const masterPrompt = getMasterPrompt(coreMemory, topDocuments, userMessage);
 
+    // Step 3: Cohere ko call karna (Purani Library Ke Sath)
     const response = await cohere.chat({
-        model: "command-r-plus",
+        model: "command-r-plus-08-2024",
         preamble: masterPrompt,
         chatHistory: chatHistory,
         message: "Please provide the response now.",
     });
 
     console.log(`[${userId}] AI response generated successfully.`);
-    return response.text;
+    // Purani library mein jawab is tarah milta hai
+    return response.body.text;
 }
 
-// === MAIN ROUTE HANDLER (With Audio) ===
+
+// === MAIN ROUTE HANDLER (Yeh bilkul waisa hi hai) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId || !message) {
@@ -106,7 +112,6 @@ app.post('/', async (req, res) => {
 
         const responseText = await callAI(userId, message, userData.chat_history);
         
-        // Audio generation ko wapis call karna
         const audioUrl = await generateAudio(responseText);
 
         userData.chat_history.push({ role: "USER", message: message });
@@ -114,7 +119,6 @@ app.post('/', async (req, res) => {
         await userRef.set(userData);
         console.log(`[${userId}] Firebase history updated.`);
 
-        // Response mein audioUrl wapis bhejna
         res.status(200).json({ reply: responseText, audioUrl: audioUrl });
 
     } catch (error) {
@@ -125,6 +129,5 @@ app.post('/', async (req, res) => {
 
 // === SERVER START ===
 app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v3.1 (RAG + Audio) is running on port ${port}`);
+    console.log(`✅ Recruitment Agent Server v3.2 (Stable RAG) is running on port ${port}`);
 });
-                                                                                

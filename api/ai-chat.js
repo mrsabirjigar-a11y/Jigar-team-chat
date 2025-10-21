@@ -1,11 +1,11 @@
-// FINAL FILE v3.3: ai-chat.js (100% Compatible with cohere-ai@7.9.5)
+// FINAL FILE v4.0: ai-chat.js (Direct API Call - No Library)
 
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { getMasterPrompt } = require('./system_prompts');
 const { loadAndPrepareData } = require('./agent_memory');
-const cohere = require('cohere-ai'); // Purani library
+// const cohere = require('cohere-ai'); // <-- Iski ab zaroorat nahi
 
 // === INITIALIZATION ===
 let coreMemory, ragDocuments;
@@ -29,7 +29,7 @@ try {
 }
 
 const db = admin.database();
-cohere.init(process.env.COHERE_API_KEY); // Purani library ko initialize karna
+// cohere.init(...); // <-- Iski ab zaroorat nahi
 
 // === EXPRESS APP SETUP ===
 const app = express();
@@ -37,9 +37,9 @@ const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === AUDIO GENERATION FUNCTION ===
+// === AUDIO GENERATION FUNCTION (Waisa hi hai) ===
 async function generateAudio(text) {
-    // ... (Is function mein koi tabdeeli nahi, yeh waisa hi rahega)
+    // ... (Is mein koi tabdeeli nahi)
     console.log("[generateAudio] Attempting to generate audio...");
     try {
         const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
@@ -65,35 +65,54 @@ async function generateAudio(text) {
     }
 }
 
-// === FINAL, COMPATIBLE 'callAI' FUNCTION ===
+// === FINAL, DIRECT API 'callAI' FUNCTION ===
 async function callAI(userId, userMessage, chatHistory) {
-    console.log(`[${userId}] Starting simplified RAG process for message: "${userMessage}"`);
+    console.log(`[${userId}] Starting Direct API call for message: "${userMessage}"`);
 
+    // Rerank ka istemal nahi kar rahe, saada search istemal kar rahe hain
     const userMessageWords = userMessage.toLowerCase().split(' ');
     const topDocuments = ragDocuments.filter(doc => {
         const promptWords = doc.prompt.toLowerCase().split(' ');
         return promptWords.some(word => userMessageWords.includes(word));
     }).slice(0, 5);
 
-    console.log(`[${userId}] Found ${topDocuments.length} relevant documents using simple search.`);
+    console.log(`[${userId}] Found ${topDocuments.length} relevant documents.`);
 
-    const masterPrompt = getMasterPrompt(coreMemory, topDocuments, userMessage, chatHistory); // Chat history ko prompt mein daalna
+    const masterPrompt = getMasterPrompt(coreMemory, topDocuments, userMessage, chatHistory);
 
-    // NAYI TABDEELI: 'generate' function istemal karna
-    const response = await cohere.generate({
-        model: "command", // 'command-r-plus-08-2024' purani library mein is naam se call hota hai
-        prompt: masterPrompt,
-        max_tokens: 1000,
-        temperature: 0.3,
+    // Direct API call ka code
+    const COHERE_API_KEY = process.env.COHERE_API_KEY;
+    const API_URL = "https://api.cohere.ai/v1/chat";
+    const body = {
+        model: "command-r-plus-08-2024",
+        preamble: masterPrompt,
+        chat_history: chatHistory,
+        message: "Please provide the response now.",
+    };
+
+    const apiResponse = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${COHERE_API_KEY}`,
+        },
+        body: JSON.stringify(body),
     });
 
+    if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(`Cohere API call failed: ${errorText}`);
+    }
+
+    const responseData = await apiResponse.json();
     console.log(`[${userId}] AI response generated successfully.`);
-    // NAYI TABDEELI: Jawab is tarah nikalna hai
-    return response.body.generations[0].text;
+    return responseData.text;
 }
 
-// === MAIN ROUTE HANDLER (Ab ismein chat history bhi prompt mein jayegi) ===
+
+// === MAIN ROUTE HANDLER (Waisa hi hai) ===
 app.post('/', async (req, res) => {
+    // ... (Is mein koi tabdeeli nahi)
     const { userId, message } = req.body;
     if (!userId || !message) {
         return res.status(400).json({ error: "User ID and message are required." });
@@ -125,5 +144,5 @@ app.post('/', async (req, res) => {
 
 // === SERVER START ===
 app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v3.3 (Stable & Final) is running on port ${port}`);
+    console.log(`✅ Recruitment Agent Server v4.0 (Direct API) is running on port ${port}`);
 });

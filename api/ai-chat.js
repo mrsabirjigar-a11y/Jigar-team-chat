@@ -1,4 +1,4 @@
-// ai-chat.js (v13.0) - Corrected Model Name & Payload Format
+// ai-chat.js (v14.0) - FIXED Deployment Crash & All Previous Errors
 
 const express = require('express');
 const admin = require('firebase-admin');
@@ -8,7 +8,7 @@ const { loadTrainingData } = require('./agent_memory.js');
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public')); // Serve static files like index.html
+app.use(express.static('public'));
 
 // --- Firebase Initialization ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
@@ -34,7 +34,7 @@ try {
     console.log("RAG training data loaded successfully.");
 } catch (error) {
     console.error("Fatal Error: Could not load RAG training data.", error);
-    process.exit(1); // Exit if training data fails to load
+    process.exit(1);
 }
 
 // --- API Endpoint to Handle Chat ---
@@ -46,46 +46,22 @@ app.post('/api/chat', async (req, res) => {
     }
 
     try {
-        // 1. Get Master Prompt (System Instructions)
         const masterPrompt = getMasterPrompt(ragDocuments, fullChatHistory);
-
-        // 2. Construct the payload for Google Gemini API
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-        
-        // --- FIX: CORRECTED MODEL NAME IN THE URL ---
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
 
-        // --- CORRECTED CONTENTS CONSTRUCTION ---
         const contents = [];
+        contents.push({ role: "user", parts: [{ text: masterPrompt }] });
+        contents.push({ role: "model", parts: [{ text: "Jee, mai Jigar Team ki AI assistant hu. Mai aapki kya sahayata kar sakti hu?" }] });
 
-        // Add the master prompt first
-        contents.push({
-            role: "user",
-            parts: [{ text: masterPrompt }]
-        });
-        // Add a placeholder model response to establish the conversation flow
-        contents.push({
-            role: "model",
-            parts: [{ text: "Jee, mai Jigar Team ki AI assistant hu. Mai aapki kya sahayata kar sakti hu?" }]
-        });
-
-        // Add the actual chat history in the correct format
         if (Array.isArray(fullChatHistory)) {
             fullChatHistory.forEach(message => {
                 const role = message.role === 'user' ? 'user' : 'model';
-                contents.push({
-                    role: role,
-                    parts: [{ text: message.content }]
-                });
+                contents.push({ role: role, parts: [{ text: message.content }] });
             });
         }
         
-        // Finally, add the latest user query
-        contents.push({
-            role: "user",
-            parts: [{ text: userQuery }]
-        });
-        // --- END OF CORRECTION ---
+        contents.push({ role: "user", parts: [{ text: userQuery }] });
 
         const payload = {
             contents: contents,
@@ -103,7 +79,6 @@ app.post('/api/chat', async (req, res) => {
             ]
         };
         
-        // 3. Call Google Gemini API
         const fetch = (await import('node-fetch')).default;
         const apiResponse = await fetch(API_URL, {
             method: 'POST',
@@ -119,16 +94,16 @@ app.post('/api/chat', async (req, res) => {
 
         const data = await apiResponse.json();
         
-        // 4. Extract AI Response
+        // --- FIX: Replaced modern syntax with universally compatible code ---
         let aiResponseText;
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        if (data && data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0 && data.candidates[0].content.parts[0].text) {
             aiResponseText = data.candidates[0].content.parts[0].text;
         } else {
             console.error("Invalid response structure from Google API:", JSON.stringify(data, null, 2));
             throw new Error('Failed to extract AI response from Google API.');
         }
+        // --- END OF FIX ---
         
-        // 5. Generate Audio with AWS Polly
         const pollyParams = {
             Engine: 'neural',
             OutputFormat: 'mp3',
@@ -140,7 +115,6 @@ app.post('/api/chat', async (req, res) => {
         const audioBuffer = await streamToBuffer(audioStream);
         const audioBase64 = audioBuffer.toString('base64');
 
-        // 6. Save to Firebase and respond to client
         const userMessageRef = db.ref(`chats/${userId}`).push();
         await userMessageRef.set({ role: 'user', content: userQuery, timestamp: Date.now() });
 
@@ -158,7 +132,6 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// Helper function to convert stream to buffer
 function streamToBuffer(stream) {
     return new Promise((resolve, reject) => {
         const chunks = [];
@@ -168,9 +141,8 @@ function streamToBuffer(stream) {
     });
 }
 
-// --- Server Start ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-    
+  

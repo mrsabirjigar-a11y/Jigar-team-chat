@@ -1,14 +1,15 @@
-// FINAL FILE v4.0: ai-chat.js (Direct API Call - No Library)
+// FINAL FILE v7.0: ai-chat.js (Pure RAG with Google Gemini)
 
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
+// Naye, saaday imports
 const { getMasterPrompt } = require('./system_prompts');
-const { loadAndPrepareData } = require('./agent_memory');
-// const cohere = require('cohere-ai'); // <-- Iski ab zaroorat nahi
+const { loadTrainingData } = require('./agent_memory'); 
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // === INITIALIZATION ===
-let coreMemory, ragDocuments;
+let ragDocuments; // Sirf ragDocuments
 try {
     console.log("Initializing application...");
     const serviceAccountPath = '/etc/secrets/firebase_credentials.json';
@@ -19,9 +20,8 @@ try {
     });
     console.log("✅ Firebase Yaddasht (Memory) Connected!");
 
-    const preparedData = loadAndPrepareData();
-    coreMemory = preparedData.coreMemory;
-    ragDocuments = preparedData.ragDocuments;
+    // Sirf training data load karna
+    ragDocuments = loadTrainingData(); 
 
 } catch (error) {
     console.error("❌ CRITICAL INITIALIZATION FAILED:", error.message);
@@ -29,9 +29,10 @@ try {
 }
 
 const db = admin.database();
-// cohere.init(...); // <-- Iski ab zaroorat nahi
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
 
-// === EXPRESS APP SETUP ===
+// === EXPRESS APP SETUP (Waisa hi hai) ===
 const app = express();
 const port = process.env.PORT || 10000;
 app.use(cors());
@@ -39,7 +40,6 @@ app.use(express.json({ limit: '10mb' }));
 
 // === AUDIO GENERATION FUNCTION (Waisa hi hai) ===
 async function generateAudio(text) {
-    // ... (Is mein koi tabdeeli nahi)
     console.log("[generateAudio] Attempting to generate audio...");
     try {
         const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
@@ -65,52 +65,32 @@ async function generateAudio(text) {
     }
 }
 
-// === FINAL, DIRECT API 'callAI' FUNCTION ===
+// === FINAL, GOOGLE GEMINI 'callAI' FUNCTION (Without Core Memory) ===
 async function callAI(userId, userMessage, chatHistory) {
-    console.log(`[${userId}] Starting Direct API call for message: "${userMessage}"`);
+    console.log(`[${userId}] Starting Google Gemini RAG process for: "${userMessage}"`);
 
-    // Rerank ka istemal nahi kar rahe, saada search istemal kar rahe hain
+    // Saada tareeqa relevant documents dhoondne ka
     const userMessageWords = userMessage.toLowerCase().split(' ');
     const topDocuments = ragDocuments.filter(doc => {
         const promptWords = doc.prompt.toLowerCase().split(' ');
         return promptWords.some(word => userMessageWords.includes(word));
-    }).slice(0, 5);
+    }).slice(0, 10); // 10 sab se milti-julti examples uthana
 
     console.log(`[${userId}] Found ${topDocuments.length} relevant documents.`);
 
-    const masterPrompt = getMasterPrompt(coreMemory, topDocuments, userMessage, chatHistory);
+    // Master Prompt banana (bina coreMemory ke)
+    const masterPrompt = getMasterPrompt(topDocuments, userMessage, chatHistory);
 
-    // Direct API call ka code
-    const COHERE_API_KEY = process.env.COHERE_API_KEY;
-    const API_URL = "https://api.cohere.ai/v1/chat";
-    const body = {
-        model: "command-r-plus-08-2024",
-        preamble: masterPrompt,
-        chat_history: chatHistory,
-        message: "Please provide the response now.",
-    };
-
-    const apiResponse = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${COHERE_API_KEY}`,
-        },
-        body: JSON.stringify(body),
-    });
-
-    if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
-        throw new Error(`Cohere API call failed: ${errorText}`);
-    }
-
-    const responseData = await apiResponse.json();
-    console.log(`[${userId}] AI response generated successfully.`);
-    return responseData.text;
+    // Google Gemini ko call karna
+    const result = await model.generateContent(masterPrompt);
+    const response = await result.response;
+    const responseText = response.text();
+    
+    console.log(`[${userId}] Google Gemini response generated successfully.`);
+    return responseText;
 }
 
-
-// === MAIN ROUTE HANDLER (With Final Fix) ===
+// === MAIN ROUTE HANDLER (Waisa hi hai) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId || !message) {
@@ -124,11 +104,9 @@ app.post('/', async (req, res) => {
         const snapshot = await userRef.once('value');
         const userData = snapshot.val() || { chat_history: [] };
 
-        // === YAHAN WOH FINAL FIX HAI ===
         if (!userData.chat_history) {
             userData.chat_history = [];
         }
-        // ===============================
 
         const responseText = await callAI(userId, message, userData.chat_history);
         
@@ -147,8 +125,8 @@ app.post('/', async (req, res) => {
     }
 });
 
-
-// === SERVER START ===
+// === SERVER START (Waisa hi hai) ===
 app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v4.0 (Direct API) is running on port ${port}`);
+    console.log(`✅ Recruitment Agent Server v7.0 (Pure RAG - Google) is running on port ${port}`);
 });
+                

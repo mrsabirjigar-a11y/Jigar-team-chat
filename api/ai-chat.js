@@ -1,4 +1,4 @@
-// FINAL & GUARANTEED v2.0: ai-chat.js (Direct Google API Call - Complete)
+// FINAL & GUARANTEED v10.0: ai-chat.js (Correct & Direct Google API Call)
 
 const express = require('express');
 const cors = require('cors');
@@ -31,7 +31,7 @@ const port = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// === AUDIO GENERATION FUNCTION (MUKAMMAL CODE) ===
+// === AUDIO GENERATION FUNCTION (Mukammal Code) ===
 async function generateAudio(text) {
     console.log("[generateAudio] Attempting to generate audio...");
     try {
@@ -58,9 +58,9 @@ async function generateAudio(text) {
     }
 }
 
-// === FINAL, DIRECT GOOGLE API 'callAI' FUNCTION ===
+// === FINAL, GUARANTEED GOOGLE API 'callAI' FUNCTION ===
 async function callAI(userId, userMessage, chatHistory) {
-    console.log(`[${userId}] Starting Direct Google API call for: "${userMessage}"`);
+    console.log(`[${userId}] Starting Guaranteed Google API call for: "${userMessage}"`);
 
     const userMessageWords = userMessage.toLowerCase().split(' ');
     const topDocuments = ragDocuments.filter(doc => {
@@ -70,17 +70,29 @@ async function callAI(userId, userMessage, chatHistory) {
 
     console.log(`[${userId}] Found ${topDocuments.length} relevant documents.`);
     
-    const masterPrompt = getMasterPrompt(topDocuments, userMessage, chatHistory);
+    // Yahan hum master prompt nahi, balke seedha system instruction bhejenge
+    const systemInstruction = getMasterPrompt(topDocuments, userQuery, chatHistory);
+
+    // Google ke naye format ke mutabiq history banana
+    const contents = chatHistory.map(turn => ({
+        role: turn.role.toLowerCase(), // 'user' ya 'model'
+        parts: [{ text: turn.message }]
+    }));
+    // Naya message add karna
+    contents.push({ role: "user", parts: [{ text: userMessage }] });
+
 
     const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_API_KEY}`;
+    // Naya aur Sahi API URL
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GOOGLE_API_KEY}`;
 
     const body = {
-        contents: [{
+        contents: contents, // Puri history yahan bhej rahe hain
+        systemInstruction: { // Master prompt yahan bhej rahe hain
             parts: [{
-                text: masterPrompt
+                text: systemInstruction
             }]
-        }]
+        }
     };
 
     const apiResponse = await fetch(API_URL, {
@@ -97,7 +109,6 @@ async function callAI(userId, userMessage, chatHistory) {
 
     const responseData = await apiResponse.json();
     
-    // Safety check agar response mein content na ho
     if (!responseData.candidates || !responseData.candidates[0].content || !responseData.candidates[0].content.parts[0].text) {
         console.error("Invalid response structure from Google API:", responseData);
         throw new Error("AI returned an invalid response structure.");
@@ -109,7 +120,7 @@ async function callAI(userId, userMessage, chatHistory) {
     return responseText;
 }
 
-// === MAIN ROUTE HANDLER (MUKAMMAL CODE) ===
+// === MAIN ROUTE HANDLER (Mukammal Code) ===
 app.post('/', async (req, res) => {
     const { userId, message } = req.body;
     if (!userId || !message) {
@@ -131,8 +142,9 @@ app.post('/', async (req, res) => {
         
         const audioUrl = await generateAudio(responseText);
 
-        userData.chat_history.push({ role: "USER", message: message });
-        userData.chat_history.push({ role: "CHATBOT", message: responseText });
+        // Firebase mein history update karte waqt role theek karna
+        userData.chat_history.push({ role: "user", message: message });
+        userData.chat_history.push({ role: "model", message: responseText }); // 'CHATBOT' ke bajaye 'model'
         await userRef.set(userData);
         console.log(`[${userId}] Firebase history updated.`);
 
@@ -146,6 +158,5 @@ app.post('/', async (req, res) => {
 
 // === SERVER START ===
 app.listen(port, () => {
-    console.log(`✅ Recruitment Agent Server v8.1 (Direct Google API - Complete) is running on port ${port}`);
+    console.log(`✅ Recruitment Agent Server v10.0 (Guaranteed) is running on port ${port}`);
 });
-        

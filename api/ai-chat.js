@@ -1,5 +1,6 @@
-// ai-chat.js (v23.0) - FINAL COHERE VERSION (No Google, No Card Needed)
+// ai-chat.js (v24.0) - FINAL FIREBASE URL FIX
 
+// --- Baaki saara code bilkul waisa hi hai ---
 console.log("Starting server... Importing libraries...");
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -10,7 +11,6 @@ const { getMasterPrompt } = require('./system_prompts.js');
 const { loadTrainingData } = require('./agent_memory.js');
 console.log("✅ Libraries imported successfully.");
 
-// --- API Key Verification (Ab Cohere key check hogi) ---
 try {
     console.log("Verifying API keys...");
     const requiredEnvVars = [ 'FIREBASE_SERVICE_ACCOUNT_KEY', 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'COHERE_API_KEY' ];
@@ -28,12 +28,19 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// --- Initializations (Firebase, Polly, RAG) ---
 let db, pollyClient, ragDocuments;
 try {
     console.log("Connecting to services...");
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount), databaseURL: "https://jigar-team-chatbot-default-rtdb.firebaseio.com" });
+    
+    // === YAHAN ASLI FIX HAI ===
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      // `databaseURL` se extra "https://" hata diya gaya hai
+      databaseURL: "jigar-team-chatbot-default-rtdb.firebaseio.com"
+    });
+    // === FIX KHATAM ===
+
     db = admin.database();
     pollyClient = new Polly({ region: process.env.AWS_REGION, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY }});
     ragDocuments = loadTrainingData();
@@ -43,10 +50,10 @@ try {
     process.exit(1);
 }
 
-// --- MAIN CHAT ENDPOINT (Ab Cohere se baat karega) ---
+// --- Baaki poora MAIN CHAT ENDPOINT bilkul waisa hi hai, usmein koi ghalti nahi ---
 app.post('/', async (req, res) => {
     console.log("\n--- New chat request received ---");
-    const { userId, message, imageBase64, chatId } = req.body; // Frontend se aane wala data
+    const { userId, message, imageBase64, chatId } = req.body;
 
     if (!userId || !message) {
         console.error("Request rejected: userId or message is missing.");
@@ -54,39 +61,28 @@ app.post('/', async (req, res) => {
     }
 
     try {
-        // --- Part 1: Chat History aur Prompt tayyar karna ---
         console.log(`[${userId}] 1. Preparing chat history and prompt for query: "${message}"`);
         const chatHistoryRef = db.ref(`chats/${userId}`);
         const snapshot = await chatHistoryRef.orderByChild('timestamp').limitToLast(10).once('value');
         const chatHistory = [];
         snapshot.forEach(child => {
             const msg = child.val();
-            // Cohere ke format mein history banayein
             const role = msg.role === 'user' ? 'USER' : 'CHATBOT';
             chatHistory.push({ role: role, message: msg.content });
         });
         
         const masterPrompt = getMasterPrompt(ragDocuments, chatHistory);
 
-        // --- Part 2: Cohere API ko call karna ---
         console.log(`[${userId}] 2. Calling Cohere API...`);
         const COHERE_API_KEY = process.env.COHERE_API_KEY;
         const API_URL = "https://api.cohere.ai/v1/chat";
         
-        const payload = {
-            model: "command-r",
-            preamble: masterPrompt,
-            message: message, // User ka message
-            chat_history: chatHistory // Purani chat history
-        };
+        const payload = { model: "command-r", preamble: masterPrompt, message: message, chat_history: chatHistory };
 
         const fetch = (await import('node-fetch')).default;
         const apiResponse = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${COHERE_API_KEY}`
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` },
             body: JSON.stringify(payload)
         });
 
@@ -98,7 +94,6 @@ app.post('/', async (req, res) => {
         
         console.log(`[${userId}] AI Response: "${aiResponseText.substring(0, 50)}..."`);
 
-        // --- Part 3: Audio Generate karna ---
         console.log(`[${userId}] 4. Generating audio with AWS Polly...`);
         const pollyParams = { Engine: 'neural', OutputFormat: 'mp3', Text: aiResponseText, VoiceId: 'Kajal', LanguageCode: 'hi-IN' };
         const audioStream = (await pollyClient.synthesizeSpeech(pollyParams)).AudioStream;
@@ -106,12 +101,10 @@ app.post('/', async (req, res) => {
         const audioBase64 = audioBuffer.toString('base64');
         console.log(`[${userId}] Audio generated successfully.`);
 
-        // --- Part 4: Firebase mein save karna aur jawab bhejna ---
         console.log(`[${userId}] 5. Saving to Firebase and sending final response...`);
         await chatHistoryRef.push().set({ role: 'user', content: message, timestamp: Date.now() });
         await chatHistoryRef.push().set({ role: 'model', content: aiResponseText, timestamp: Date.now() });
 
-        // Frontend ko wahi format bhejein jo woh expect kar raha hai
         res.json({ reply: aiResponseText, audioUrl: `data:audio/mpeg;base64,${audioBase64}`, chatId: chatId || userId });
         console.log(`[${userId}] --- Request completed successfully! ---`);
 
@@ -135,4 +128,3 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n✅✅✅ Jigar Team AI Server (COHERE EDITION) is live on port ${PORT} ✅✅✅`);
 });
-        

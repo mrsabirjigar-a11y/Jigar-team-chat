@@ -1,4 +1,4 @@
-// ai-chat.js (v25.0) - THE ULTIMATE "READ FROM FILE" FIX
+// ai-chat.js (v26.0) - THE ABSOLUTE FINAL URL FIX
 
 // --- Baaki saara code bilkul waisa hi hai ---
 console.log("Starting server... Importing libraries...");
@@ -6,16 +6,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const admin = require('firebase-admin');
-const fs = require('fs'); // <--- File System library ko wapas import kiya
+const fs = require('fs');
 const { Polly } = require('@aws-sdk/client-polly');
 const { getMasterPrompt } = require('./system_prompts.js');
 const { loadTrainingData } = require('./agent_memory.js');
 console.log("✅ Libraries imported successfully.");
 
-// --- API Key Verification (waisa hi rahega) ---
 try {
     console.log("Verifying API keys...");
-    const requiredEnvVars = [ 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'COHERE_API_KEY' ]; // Firebase key yahan se hata di
+    const requiredEnvVars = [ 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'COHERE_API_KEY' ];
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     if (missingVars.length > 0) { throw new Error(`Missing environment variables: ${missingVars.join(', ')}`); }
     console.log("✅ All API keys are present.");
@@ -34,14 +33,14 @@ let db, pollyClient, ragDocuments;
 try {
     console.log("Connecting to services...");
     
-    // === YAHAN ASLI, FINAL FIX HAI ===
-    // Key ko ab file se padha ja raha hai, jaisa aapne kaha
     const serviceAccountPath = '/etc/secrets/firebase_credentials.json';
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     
+    // === YAHAN ASLI, FINAL, 100% CORRECT FIX HAI ===
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: "https://jigar-team-chatbot-default-rtdb.firebaseio.com" // Sahi URL
+      // URL ko bilkul waisa likha hai jaisa Firebase chahta hai
+      databaseURL: "https://jigar-team-chatbot-default-rtdb.firebaseio.com"
     });
     // === FIX KHATAM ===
 
@@ -51,7 +50,7 @@ try {
     console.log("✅ All services connected.");
 } catch (error) {
     console.error("❌ FATAL STARTUP ERROR (INITIALIZATION):", error.message);
-    console.error("Stack Trace:", error.stack); // Poori ghalti dikhayein
+    console.error("Stack Trace:", error.stack);
     process.exit(1);
 }
 

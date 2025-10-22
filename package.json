@@ -1,19 +1,18 @@
 {
-  "name": "jigar-team-ai-chat-backend",
-  "version": "31.0.0",
-  "description": "AI Chat with Hugging Face, Firebase, and AWS Polly TTS",
-  "main": "ai-chat.js",
+  "name": "jigar-team-ai-chat",
+  "version": "1.0.0",
+  "description": "AI Chat with AWS Polly TTS",
+  "main": "index.js",
   "scripts": {
-    "start": "node ai-chat.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Jigar Shahzad & Manus AI",
+  "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "firebase-admin": "^12.0.0",
     "@aws-sdk/client-polly": "^3.525.0",
-    "node-fetch": "^2.7.0",
-    "cors": "^2.8.5"
+    "cohere-ai": "^7.9.5",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "firebase-admin": "^12.0.0"
   }
 }

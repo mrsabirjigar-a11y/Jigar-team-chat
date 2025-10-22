@@ -1,4 +1,4 @@
-// ai-chat.js (v22.0) - THE FINAL VERSION FOR YOUR ORIGINAL FRONTEND
+// ai-chat.js (v23.0 - FINAL GROQ VERSION)
 
 console.log("Starting server... Importing libraries...");
 const express = require('express');
@@ -6,13 +6,16 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { Polly } = require('@aws-sdk/client-polly');
+// NAYA: getMasterPrompt ab 3 cheezein lega
 const { getMasterPrompt } = require('./system_prompts.js');
 const { loadTrainingData } = require('./agent_memory.js');
 console.log("✅ Libraries imported successfully.");
 
+// === SECTION 1: API KEY CHECK (UPDATED) ===
+// Ab humein GEMINI_API_KEY ki zaroorat nahi, GROQ_API_KEY ki hai.
 try {
     console.log("Verifying API keys...");
-    const requiredEnvVars = [ 'FIREBASE_SERVICE_ACCOUNT_KEY', 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'GEMINI_API_KEY' ];
+    const requiredEnvVars = [ 'FIREBASE_SERVICE_ACCOUNT_KEY', 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'GROQ_API_KEY' ]; // GEMINI_API_KEY hata kar GROQ_API_KEY daal diya
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     if (missingVars.length > 0) { throw new Error(`Missing environment variables: ${missingVars.join(', ')}`); }
     console.log("✅ All API keys are present.");
@@ -44,13 +47,8 @@ try {
 app.post('/', async (req, res) => {
     console.log("\n--- New chat request received ---");
     
-    // =================================================================
-    // === YAHAN FINAL FIX LAGAYA GAYA HAI ===
-    // =================================================================
-    // Hum frontend se 'message' le rahe hain aur usko 'userQuery' bana rahe hain.
     const { userId, message, fullChatHistory } = req.body;
-    const userQuery = message; // YEH LINE AAPKE FRONTEND KE LIYE HAI
-    // =================================================================
+    const userQuery = message; // Aapka frontend 'message' bhejta hai
 
     if (!userId || !userQuery) {
         console.error("Request rejected: userId or userQuery is missing.");
@@ -60,42 +58,85 @@ app.post('/', async (req, res) => {
 
     try {
         console.log(`[${userId}] 1. Generating master prompt for user query: "${userQuery}"`);
-        const masterPrompt = getMasterPrompt(ragDocuments, fullChatHistory);
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
-        const contents = [ { role: "user", parts: [{ text: masterPrompt }] }, { role: "model", parts: [{ text: "Jee, mai Jigar Team ki AI assistant hu. Mai aapki kya sahayata kar sakti hu?" }] }, ...(Array.isArray(fullChatHistory) ? fullChatHistory.map(m => ({ role: m.role, parts: [{ text: m.content }] })) : []), { role: "user", parts: [{ text: userQuery }] } ];
-        const payload = { contents, generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }, safetySettings: [ { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }, { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }, { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }, { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' } ] };
-        console.log(`[${userId}] 2. Calling Google Gemini API...`);
+        // NAYA: getMasterPrompt ab userQuery alag se le raha hai
+        const masterPrompt = getMasterPrompt(ragDocuments, fullChatHistory, userQuery);
+        
+        // =================================================================
+        // === SECTION 2: GOOGLE GEMINI KI JAGAH GROQ API CALL (UPDATED) ===
+        // =================================================================
+        
+        console.log(`[${userId}] 2. Calling Groq API...`);
         const fetch = (await import('node-fetch')).default;
+
+        const GROQ_API_KEY = process.env.GROQ_API_KEY; 
+        
+        const groqPayload = {
+            model: "llama3-8b-8192", // Groq par Llama 3 ka model
+            messages: [
+                // Hum poora master prompt aur user ka sawaal ek saath bhej rahe hain
+                { role: "system", content: masterPrompt },
+                { role: "user", content: userQuery }
+            ],
+            temperature: 0.7,
+            max_tokens: 2048,
+        };
+
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        const apiResponse = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller.signal });
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second ka timeout
+
+        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify(groqPayload),
+            signal: controller.signal
+        });
+        
         clearTimeout(timeoutId);
-        if (!apiResponse.ok) throw new Error(`Google API request failed with status ${apiResponse.status}: ${await apiResponse.text()}`);
-        console.log(`[${userId}] 3. Received response from Google...`);
-        const data = await apiResponse.json();
-        let aiResponseText;
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            aiResponseText = data.candidates[0].content.parts[0].text;
-        } else {
-            if (data.promptFeedback?.blockReason) throw new Error(`Request blocked by Google for: ${data.promptFeedback.blockReason}`);
-            throw new Error('Failed to extract valid text from Google API response.');
+
+        if (!groqResponse.ok) {
+            const errorText = await groqResponse.text();
+            console.error("Groq API Error:", errorText);
+            throw new Error(`Groq API request failed with status ${groqResponse.status}`);
         }
+        
+        console.log(`[${userId}] 3. Received response from Groq...`);
+        const groqData = await groqResponse.json();
+        
+        let aiResponseText = "Maazrat, main abhi soch nahi paa rahi. Please dobara koshish karein."; // Default message
+        if (groqData.choices && groqData.choices[0]?.message?.content) {
+            aiResponseText = groqData.choices[0].message.content;
+        } else {
+             // Agar Groq se ajeeb response aaye to error log hoga
+            console.error("Failed to extract valid text from Groq API response:", JSON.stringify(groqData));
+            throw new Error('Invalid response structure from Groq API.');
+        }
+        
+        // =================================================================
+        // === UPDATE KHATAM ===
+        // =================================================================
+
+        // Baaki ka code bilkul waisa hi hai, usko nahi chhera gaya
         console.log(`[${userId}] 4. Generating audio...`);
         const pollyParams = { Engine: 'neural', OutputFormat: 'mp3', Text: aiResponseText, VoiceId: 'Kajal', LanguageCode: 'hi-IN' };
         const audioStream = (await pollyClient.synthesizeSpeech(pollyParams)).AudioStream;
         const audioBuffer = await streamToBuffer(audioStream);
         const audioBase64 = audioBuffer.toString('base64');
+        
         console.log(`[${userId}] 5. Saving to Firebase and sending response...`);
         await db.ref(`chats/${userId}`).push().set({ role: 'user', content: userQuery, timestamp: Date.now() });
         await db.ref(`chats/${userId}`).push().set({ role: 'model', content: aiResponseText, timestamp: Date.now() });
         
-        // Jawab wapas purane format mein bhej rahe hain
         res.json({ reply: aiResponseText, audioUrl: `data:audio/mpeg;base64,${audioBase64}` });
         console.log(`[${userId}] --- Request completed successfully! ---`);
 
     } catch (error) {
+        // Aapka error handling wala block bilkul mehfooz hai
         console.error(`\n❌❌❌ [${userId}] AN ERROR OCCURRED DURING CHAT ❌❌❌`);
+        console.error(error); // Poora error dikhane ke liye
+
         if (error.name === 'AbortError') {
             res.status(504).json({ error: 'The AI model took too long to respond.' });
         } else {
@@ -117,4 +158,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n✅✅✅ Jigar Team AI Server is live and running on port ${PORT} ✅✅✅`);
 });
-                  
+    

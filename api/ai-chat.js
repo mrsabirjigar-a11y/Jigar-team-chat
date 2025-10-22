@@ -1,4 +1,4 @@
-// ai-chat.js (v26.0) - THE ABSOLUTE FINAL URL FIX
+// ai-chat.js (v27.0) - THE HASAN'S LOGIC EDITION (Using your old, working Firebase logic)
 
 // --- Baaki saara code bilkul waisa hi hai ---
 console.log("Starting server... Importing libraries...");
@@ -33,21 +33,22 @@ let db, pollyClient, ragDocuments;
 try {
     console.log("Connecting to services...");
     
-    const serviceAccountPath = '/etc/secrets/firebase_credentials.json';
+    // === YAHAN AAPKA PURANA, CHALTA HUA LOGIC COPY KIYA GAYA HAI ===
+    const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     
-    // === YAHAN ASLI, FINAL, 100% CORRECT FIX HAI ===
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      // URL ko bilkul waisa likha hai jaisa Firebase chahta hai
-      databaseURL: "https://jigar-team-chatbot-default-rtdb.firebaseio.com"
+        credential: admin.credential.cert(serviceAccount),
+        // Aapka purana, chalta hua URL yahan daala gaya hai
+        databaseURL: "https://life-change-easy-default-rtdb.firebaseio.com" 
     });
+    console.log("✅ Firebase Yaddasht (Memory) Connected using YOUR proven logic!");
     // === FIX KHATAM ===
 
     db = admin.database();
     pollyClient = new Polly({ region: process.env.AWS_REGION, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY }});
     ragDocuments = loadTrainingData();
-    console.log("✅ All services connected.");
+    console.log("✅ All other services connected.");
 } catch (error) {
     console.error("❌ FATAL STARTUP ERROR (INITIALIZATION):", error.message);
     console.error("Stack Trace:", error.stack);
@@ -67,16 +68,13 @@ app.post('/', async (req, res) => {
     }
 
     try {
-        console.log(`[${userId}] 1. Preparing chat history and prompt for query: "${message}"`);
-        const chatHistoryRef = db.ref(`chats/${userId}`);
-        const snapshot = await chatHistoryRef.orderByChild('timestamp').limitToLast(10).once('value');
-        const chatHistory = [];
-        snapshot.forEach(child => {
-            const msg = child.val();
-            const role = msg.role === 'user' ? 'USER' : 'CHATBOT';
-            chatHistory.push({ role: role, message: msg.content });
-        });
-        
+        // Hum yahan `chat_users` path istemal karenge, jaisa aapki purani file mein tha
+        const chatHistoryRef = db.ref(`chat_users/${userId}`); 
+        const snapshot = await chatHistoryRef.once('value');
+        const userData = snapshot.val() || {};
+        const chatHistory = userData.chat_history || [];
+
+        console.log(`[${userId}] 1. Preparing prompt for query: "${message}"`);
         const masterPrompt = getMasterPrompt(ragDocuments, chatHistory);
 
         console.log(`[${userId}] 2. Calling Cohere API...`);
@@ -94,7 +92,7 @@ app.post('/', async (req, res) => {
 
         if (!apiResponse.ok) throw new Error(`Cohere API request failed with status ${apiResponse.status}: ${await apiResponse.text()}`);
         
-        console.log(`[${userId}] 3. Received response from Cohere. Parsing data...`);
+        console.log(`[${userId}] 3. Received response from Cohere.`);
         const data = await apiResponse.json();
         const aiResponseText = data.text;
         
@@ -108,8 +106,9 @@ app.post('/', async (req, res) => {
         console.log(`[${userId}] Audio generated successfully.`);
 
         console.log(`[${userId}] 5. Saving to Firebase and sending final response...`);
-        await chatHistoryRef.push().set({ role: 'user', content: message, timestamp: Date.now() });
-        await chatHistoryRef.push().set({ role: 'model', content: aiResponseText, timestamp: Date.now() });
+        // History ko wapas 'chat_history' mein save karein, jaisa aapka purana logic tha
+        const newHistory = [...chatHistory, { role: "USER", message: message }, { role: "CHATBOT", message: aiResponseText }];
+        await chatHistoryRef.child('chat_history').set(newHistory);
 
         res.json({ reply: aiResponseText, audioUrl: `data:audio/mpeg;base64,${audioBase64}`, chatId: chatId || userId });
         console.log(`[${userId}] --- Request completed successfully! ---`);
@@ -132,6 +131,6 @@ function streamToBuffer(stream) {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n✅✅✅ Jigar Team AI Server (COHERE + FILE READ) is live on port ${PORT} ✅✅✅`);
+    console.log(`\n✅✅✅ Jigar Team AI Server (HASAN'S LOGIC EDITION) is live on port ${PORT} ✅✅✅`);
 });
-        
+       

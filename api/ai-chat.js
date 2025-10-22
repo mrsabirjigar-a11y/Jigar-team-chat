@@ -1,4 +1,4 @@
-// ai-chat.js (v24.0) - FINAL FIREBASE URL FIX
+// ai-chat.js (v25.0) - THE ULTIMATE "READ FROM FILE" FIX
 
 // --- Baaki saara code bilkul waisa hi hai ---
 console.log("Starting server... Importing libraries...");
@@ -6,14 +6,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const admin = require('firebase-admin');
+const fs = require('fs'); // <--- File System library ko wapas import kiya
 const { Polly } = require('@aws-sdk/client-polly');
 const { getMasterPrompt } = require('./system_prompts.js');
 const { loadTrainingData } = require('./agent_memory.js');
 console.log("✅ Libraries imported successfully.");
 
+// --- API Key Verification (waisa hi rahega) ---
 try {
     console.log("Verifying API keys...");
-    const requiredEnvVars = [ 'FIREBASE_SERVICE_ACCOUNT_KEY', 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'COHERE_API_KEY' ];
+    const requiredEnvVars = [ 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'COHERE_API_KEY' ]; // Firebase key yahan se hata di
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     if (missingVars.length > 0) { throw new Error(`Missing environment variables: ${missingVars.join(', ')}`); }
     console.log("✅ All API keys are present.");
@@ -31,13 +33,15 @@ app.use(express.static('public'));
 let db, pollyClient, ragDocuments;
 try {
     console.log("Connecting to services...");
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
     
-    // === YAHAN ASLI FIX HAI ===
+    // === YAHAN ASLI, FINAL FIX HAI ===
+    // Key ko ab file se padha ja raha hai, jaisa aapne kaha
+    const serviceAccountPath = '/etc/secrets/firebase_credentials.json';
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      // `databaseURL` se extra "https://" hata diya gaya hai
-      databaseURL: "jigar-team-chatbot-default-rtdb.firebaseio.com"
+      databaseURL: "https://jigar-team-chatbot-default-rtdb.firebaseio.com" // Sahi URL
     });
     // === FIX KHATAM ===
 
@@ -47,10 +51,13 @@ try {
     console.log("✅ All services connected.");
 } catch (error) {
     console.error("❌ FATAL STARTUP ERROR (INITIALIZATION):", error.message);
+    console.error("Stack Trace:", error.stack); // Poori ghalti dikhayein
     process.exit(1);
 }
 
-// --- Baaki poora MAIN CHAT ENDPOINT bilkul waisa hi hai, usmein koi ghalti nahi ---
+// --- Baaki poora code (app.post, etc.) bilkul waisa ka waisa hi hai ---
+// Usmein koi change nahi karna
+
 app.post('/', async (req, res) => {
     console.log("\n--- New chat request received ---");
     const { userId, message, imageBase64, chatId } = req.body;
@@ -126,5 +133,6 @@ function streamToBuffer(stream) {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n✅✅✅ Jigar Team AI Server (COHERE EDITION) is live on port ${PORT} ✅✅✅`);
+    console.log(`\n✅✅✅ Jigar Team AI Server (COHERE + FILE READ) is live on port ${PORT} ✅✅✅`);
 });
+        

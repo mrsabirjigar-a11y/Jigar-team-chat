@@ -81,7 +81,7 @@ app.post('/', async (req, res) => {
         const COHERE_API_KEY = process.env.COHERE_API_KEY;
         const API_URL = "https://api.cohere.ai/v1/chat";
         
-        const payload = { model: "command-r", preamble: masterPrompt, message: message, chat_history: chatHistory };
+        const payload = { model: "command-r-plus-08-2024", preamble: masterPrompt, message: message, chat_history: chatHistory };
 
         const fetch = (await import('node-fetch')).default;
         const apiResponse = await fetch(API_URL, {

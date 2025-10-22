@@ -1,6 +1,6 @@
-// ai-chat.js (v27.0) - THE HASAN'S LOGIC EDITION (Using your old, working Firebase logic)
+// ai-chat.js (v30.0) - THE FINAL BOSS! (Using Your Personal Hugging Face Model)
 
-// --- Baaki saara code bilkul waisa hi hai ---
+// --- LIBRARIES ---
 console.log("Starting server... Importing libraries...");
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -8,13 +8,13 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const fs = require('fs');
 const { Polly } = require('@aws-sdk/client-polly');
-const { getMasterPrompt } = require('./system_prompts.js');
-const { loadTrainingData } = require('./agent_memory.js');
 console.log("✅ Libraries imported successfully.");
 
+// --- API KEY VERIFICATION ---
 try {
     console.log("Verifying API keys...");
-    const requiredEnvVars = [ 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'COHERE_API_KEY' ];
+    // Ab humein sirf AWS aur Hugging Face ki keys chahiye
+    const requiredEnvVars = [ 'AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'HUGGING_FACE_TOKEN' ];
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     if (missingVars.length > 0) { throw new Error(`Missing environment variables: ${missingVars.join(', ')}`); }
     console.log("✅ All API keys are present.");
@@ -26,95 +26,104 @@ try {
 const app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-let db, pollyClient, ragDocuments;
+// --- INITIALIZATIONS ---
+let db, pollyClient;
 try {
     console.log("Connecting to services...");
     
-    // === YAHAN AAPKA PURANA, CHALTA HUA LOGIC COPY KIYA GAYA HAI ===
+    // Aapka purana, chalta hua Firebase logic
     const serviceAccountPath = '/etc/secrets/firebase_credentials.json'; 
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-    
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        // Aapka purana, chalta hua URL yahan daala gaya hai
         databaseURL: "https://life-change-easy-default-rtdb.firebaseio.com" 
     });
-    console.log("✅ Firebase Yaddasht (Memory) Connected using YOUR proven logic!");
-    // === FIX KHATAM ===
-
     db = admin.database();
+    console.log("✅ Firebase Yaddasht (Memory) Connected!");
+
+    // AWS Polly (Voice Generation)
     pollyClient = new Polly({ region: process.env.AWS_REGION, credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY }});
-    ragDocuments = loadTrainingData();
-    console.log("✅ All other services connected.");
+    console.log("✅ AWS Polly (Voice) Connected.");
+
 } catch (error) {
     console.error("❌ FATAL STARTUP ERROR (INITIALIZATION):", error.message);
-    console.error("Stack Trace:", error.stack);
     process.exit(1);
 }
 
-// --- Baaki poora code (app.post, etc.) bilkul waisa ka waisa hi hai ---
-// Usmein koi change nahi karna
 
+// --- THE NEW, FINAL CHAT ENDPOINT ---
 app.post('/', async (req, res) => {
-    console.log("\n--- New chat request received ---");
-    const { userId, message, imageBase64, chatId } = req.body;
+    console.log("\n--- New request received for your PERSONAL AI ---");
+    const { userId, message } = req.body;
 
     if (!userId || !message) {
-        console.error("Request rejected: userId or message is missing.");
         return res.status(400).json({ error: 'userId or message is missing.' });
     }
 
     try {
-        // Hum yahan `chat_users` path istemal karenge, jaisa aapki purani file mein tha
+        // --- Step 1: Get Chat History from Firebase ---
         const chatHistoryRef = db.ref(`chat_users/${userId}`); 
         const snapshot = await chatHistoryRef.once('value');
         const userData = snapshot.val() || {};
         const chatHistory = userData.chat_history || [];
 
-        console.log(`[${userId}] 1. Preparing prompt for query: "${message}"`);
-        const masterPrompt = getMasterPrompt(ragDocuments, chatHistory);
-
-        console.log(`[${userId}] 2. Calling Cohere API...`);
-        const COHERE_API_KEY = process.env.COHERE_API_KEY;
-        const API_URL = "https://api.cohere.ai/v1/chat";
+        // --- Step 2: Call YOUR PERSONAL Hugging Face Model ---
+        console.log(`[${userId}] 1. Calling your personal model: sabirj/jigar-shahzad-ai-mistral-v1`);
+        const HF_TOKEN = process.env.HUGGING_FACE_TOKEN;
+        const API_URL = "https://api-inference.huggingface.co/models/sabirj/jigar-shahzad-ai-mistral-v1";
         
-        const payload = { model: "command-r-plus-08-2024", preamble: masterPrompt, message: message, chat_history: chatHistory };
+        // Hum model ko batate hain ke user ne kya kaha hai
+        const payload = {
+            inputs: message,
+            parameters: {
+                // Hum yahan history nahi bhej rahe, kyunki model abhi simple hai
+                // Agle version mein hum history bhi add kar sakte hain
+            }
+        };
 
         const fetch = (await import('node-fetch')).default;
         const apiResponse = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${COHERE_API_KEY}` },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${HF_TOKEN}` },
             body: JSON.stringify(payload)
         });
 
-        if (!apiResponse.ok) throw new Error(`Cohere API request failed with status ${apiResponse.status}: ${await apiResponse.text()}`);
+        if (!apiResponse.ok) {
+            const errorText = await apiResponse.text();
+            // Agar model "so" raha hai, toh usko jagaane ka message dein
+            if (apiResponse.status === 503 && errorText.includes("is currently loading")) {
+                console.warn(`[${userId}] Model is loading, please wait 20-30 seconds and try again.`);
+                return res.status(503).json({ error: "AI model is starting up. Please send your message again in 20 seconds." });
+            }
+            throw new Error(`Hugging Face API request failed: ${errorText}`);
+        }
         
-        console.log(`[${userId}] 3. Received response from Cohere.`);
+        console.log(`[${userId}] 2. Received response from your model.`);
         const data = await apiResponse.json();
-        const aiResponseText = data.text;
         
-        console.log(`[${userId}] AI Response: "${aiResponseText.substring(0, 50)}..."`);
+        // Naye model ka jawab 'generated_text' mein aata hai
+        const aiResponseText = data[0]?.generated_text || "Maazrat, main abhi aapka jawab nahi de sakta.";
+        console.log(`[${userId}] AI Response: "${aiResponseText.substring(0, 70)}..."`);
 
-        console.log(`[${userId}] 4. Generating audio with AWS Polly...`);
+        // --- Step 3: Generate Audio with AWS Polly ---
+        console.log(`[${userId}] 3. Generating audio...`);
         const pollyParams = { Engine: 'neural', OutputFormat: 'mp3', Text: aiResponseText, VoiceId: 'Kajal', LanguageCode: 'hi-IN' };
         const audioStream = (await pollyClient.synthesizeSpeech(pollyParams)).AudioStream;
         const audioBuffer = await streamToBuffer(audioStream);
         const audioBase64 = audioBuffer.toString('base64');
-        console.log(`[${userId}] Audio generated successfully.`);
 
-        console.log(`[${userId}] 5. Saving to Firebase and sending final response...`);
-        // History ko wapas 'chat_history' mein save karein, jaisa aapka purana logic tha
+        // --- Step 4: Save to Firebase & Send Response ---
+        console.log(`[${userId}] 4. Saving to Firebase and sending final response...`);
         const newHistory = [...chatHistory, { role: "USER", message: message }, { role: "CHATBOT", message: aiResponseText }];
         await chatHistoryRef.child('chat_history').set(newHistory);
 
-        res.json({ reply: aiResponseText, audioUrl: `data:audio/mpeg;base64,${audioBase64}`, chatId: chatId || userId });
+        res.json({ reply: aiResponseText, audioUrl: `data:audio/mpeg;base64,${audioBase64}` });
         console.log(`[${userId}] --- Request completed successfully! ---`);
 
     } catch (error) {
-        console.error(`\n❌❌❌ [${userId}] AN ERROR OCCURRED DURING CHAT ❌❌❌`);
+        console.error(`\n❌❌❌ [${userId}] AN ERROR OCCURRED ❌❌❌`);
         console.error("Error Message:", error.message);
         res.status(500).json({ error: 'An internal server error occurred.' });
     }
@@ -131,6 +140,6 @@ function streamToBuffer(stream) {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n✅✅✅ Jigar Team AI Server (HASAN'S LOGIC EDITION) is live on port ${PORT} ✅✅✅`);
+    console.log(`\n🚀🚀🚀 Jigar Shahzad's PERSONAL AI Server is LIVE on port ${PORT} 🚀🚀🚀`);
 });
     

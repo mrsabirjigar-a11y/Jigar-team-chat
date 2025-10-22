@@ -71,7 +71,7 @@ app.post('/', async (req, res) => {
         const GROQ_API_KEY = process.env.GROQ_API_KEY; 
         
         const groqPayload = {
-            model: "llama3-8b-8192", // Groq par Llama 3 ka model
+            model: "llama3-70b-8192", // Groq par Llama 3 ka model
             messages: [
                 // Hum poora master prompt aur user ka sawaal ek saath bhej rahe hain
                 { role: "system", content: masterPrompt },

@@ -1,4 +1,4 @@
-// agent_memory.js (THE REAL FINAL VERSION - Handles .jsonl correctly)
+// agent_memory.js (v3.0 - THE DEBUGGING CAMERA EDITION)
 
 const fs = require('fs');
 const path = require('path');
@@ -7,34 +7,13 @@ function loadTrainingData() {
     try {
         const filePath = path.join(__dirname, 'training_data.jsonl');
         const fileContent = fs.readFileSync(filePath, 'utf8');
-
-        // === YAHAN ASLI FIX HAI ===
-        // .jsonl file ko line-by-line parse karein
         const lines = fileContent.trim().split('\n');
-        const documents = lines.map(function(line) {
-            try {
-                // Har line ko alag se JSON parse karein
-                return JSON.parse(line);
-            } catch (e) {
-                console.error("Warning: Could not parse a line in training_data.jsonl:", line);
-                return null; // Agar koi line kharab hai to usko ignore karein
-            }
-        }).filter(function(doc) {
-            // Sirf sahi documents ko rakhein
-            return doc !== null;
-        });
-        
-        // Final data ko us format mein rakhein jaisa baaki code expect kar raha hai
+        const documents = lines.map(line => JSON.parse(line));
         const formattedData = {
-            documents: documents.map(function(doc) {
-                // Farz karein har line mein 'text' naam ki key hai
-                return { content: doc.text || '' }; 
-            })
+            documents: documents.map(doc => ({ content: doc.text || '' }))
         };
-
+        console.log(`✅ Training data loaded. Found ${formattedData.documents.length} documents.`); // Naya Log
         return formattedData;
-        // === FIX KHATAM ===
-
     } catch (error) {
         console.error("Fatal Error: Could not read or process training_data.jsonl", error);
         throw error;
@@ -42,7 +21,10 @@ function loadTrainingData() {
 }
 
 function findRelevantDocuments(query, ragDocuments) {
+    // === YAHAN DEBUGGING CAMERA HAI ===
+    console.log(`[DEBUG] Searching for documents related to query: "${query}"`);
     if (!query || !ragDocuments || !Array.isArray(ragDocuments.documents)) {
+        console.log(`[DEBUG] Invalid inputs to findRelevantDocuments. Returning empty.`);
         return [];
     }
 
@@ -58,19 +40,18 @@ function findRelevantDocuments(query, ragDocuments) {
         return { content: doc.content, score: score };
     });
 
-    const relevantDocs = scoredDocs.filter(function(doc) {
-        return doc.score > 0;
-    });
+    const relevantDocs = scoredDocs.filter(doc => doc.score > 0);
+    relevantDocs.sort((a, b) => b.score - a.score);
+    
+    const topDocs = relevantDocs.slice(0, 5); // Hum 5 documents nikalenge
+    
+    console.log(`[DEBUG] Found ${topDocs.length} relevant documents.`);
+    if (topDocs.length > 0) {
+        console.log(`[DEBUG] Top relevant document found: "${topDocs[0].content.substring(0, 70)}..."`);
+    }
+    // === DEBUGGING KHATAM ===
 
-    relevantDocs.sort(function(a, b) {
-        return b.score - a.score;
-    });
-
-    return relevantDocs.slice(0, 3);
+    return topDocs;
 }
 
-module.exports = {
-    loadTrainingData,
-    findRelevantDocuments
-};
-                  
+module.exports = { loadTrainingData, findRelevantDocuments };

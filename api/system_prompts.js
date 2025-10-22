@@ -1,44 +1,57 @@
-// system_prompts.js (FINAL, COMPATIBLE VERSION)
+// system_prompts.js (v3.0 - FINAL VERSION FOR GROQ)
 
+// Humein agent_memory.js se findRelevantDocuments wala function chahiye
 const { findRelevantDocuments } = require('./agent_memory.js');
 
-function getMasterPrompt(ragDocuments, chatHistory) {
-    // chatHistory ko hamesha ek array maanein, bhale hi woh undefined ho
-    const safeChatHistory = Array.isArray(chatHistory) ? chatHistory : [];
-
-    // Purana, compatible tareeka last user query dhoondne ka
-    let lastUserQuery = '';
-    if (safeChatHistory.length > 0) {
-        for (let i = safeChatHistory.length - 1; i >= 0; i--) {
-            if (safeChatHistory[i] && safeChatHistory[i].role === 'user') {
-                lastUserQuery = safeChatHistory[i].content;
-                break;
-            }
-        }
-    }
-
-    const relevantDocs = findRelevantDocuments(lastUserQuery, ragDocuments);
+// getMasterPrompt function ab 3 cheezein lega: aapki data file, chat history, aur user ka naya message
+function getMasterPrompt(ragDocuments, chatHistory, userQuery) {
     
-    const formattedHistory = safeChatHistory.map(function(m) {
-        return (m.role || 'unknown') + ': ' + (m.content || '');
-    }).join('\n');
+    // =================================================================
+    // === YAHAN PAR HUM AI KA CHARACTER AUR RULES DEFINE KAR RAHE HAIN ===
+    // =================================================================
+    const characterDefinition = `
+        Tum Jigar Team ki ek expert AI Sales Agent ho jiska naam Kajal hai. Tumhara wahid maqsad user ko part-time job plans ke liye convince karke onboard karna hai.
 
-    const masterPrompt = `
-        You are a highly intelligent AI recruitment assistant for a company called "Jigar Team". Your name is Kajal.
-        Your primary goal is to onboard users for part-time job plans. You must be loyal, persuasive, handle objections, show empathy, but always guide the conversation back to the business goal.
-        NEVER apologize or say you "don't know". If you don't have an answer, use the provided knowledge to form a logical, confident response.
-        ALWAYS stay in character. You are a professional assistant.
-
-        **Available Knowledge Documents (Use this to answer questions):**
-        ${relevantDocs.map(function(doc) { return '- ' + doc.content; }).join('\n')}
-
-        **Conversation History (for context):**
-        ${formattedHistory}
-
-        Based on all the above information, provide a concise, relevant, and persuasive response to the LAST user message.
+        TUMHARE BAAT KARNE KE 4 BUNYADI USOOL (Inko kabhi nahi torna):
+        1.  **FILE KO FOLLOW KARO:** Tumhara har jawab neeche di gayi 'ZAROORI MALOOMAT' (user ki file) aur 'PURAANI BAAT CHEET' (chat history) par mabni hona chahiye. Welcome message, plans dikhane ka tareeqa, sab kuch file ke mutabiq hona chahiye.
+        2.  **SALES MINDSET:** Tum ek salesperson ho. Har jawab ka maqsad user ko plan khareedne ke qareeb lana hai. Agar user ek plan reject kare, to foran doosra plan offer karo. Plans ke fayde compare karke batao.
+        3.  **CONFIDENCE, NOT APOLOGY:** Kabhi bhi "Main nahi janti" ya "Maazrat" mat kaho. Agar 'ZAROORI MALOOMAT' mein jawab na ho, to pichli baaton aur apne character ke hisab se ek logical aur confident jawab banao jo user ko engage rakhe aur baat ko business ki taraf wapas le aaye.
+        4.  **STAY LOYAL:** Hamesha Jigar Team ke business ke daire mein raho. Idhar-udhar ki fazool baatein mat karo.
     `;
 
-    return masterPrompt;
+    // =================================================================
+    // === YAHAN HUM AI KO USKA MATERIAL DE RAHE HAIN ===
+    // =================================================================
+
+    // Step 1: User ke naye message se milti-julti information file se nikalo
+    // Yeh function aapke agent_memory.js se aa raha hai
+    const relevantDocs = findRelevantDocuments(userQuery, ragDocuments);
+    
+    // Step 2: Un documents ko saaf format mein likho taakeh AI parh sake
+    const knowledgeBase = relevantDocs.length > 0
+        ? relevantDocs.map(doc => '- ' + doc.content).join('\n')
+        : "User ki file mein is sawaal se mutalliq koi khaas maloomat nahi mili.";
+
+    // Step 3: Puraani chat history ko format karo taakeh AI ko context yaad rahe
+    const formattedHistory = (Array.isArray(chatHistory) ? chatHistory : [])
+        .map(m => `${m.role}: ${m.content}`)
+        .join('\n');
+
+    // Final Prompt: Hum sab kuch (Rules, File ka Data, History) mila kar AI ko bhej rahe hain
+    const finalMasterPrompt = `
+        ${characterDefinition}
+        ---
+        ZAROORI MALOOMAT (Jawab dene ke liye isko istemal karo):
+        ${knowledgeBase}
+        ---
+        PURAANI BAAT CHEET (Context ke liye):
+        ${formattedHistory}
+    `;
+
+    return finalMasterPrompt;
 }
 
-module.exports = { getMasterPrompt };
+// Hum is function ko export kar rahe hain taakeh ai-chat.js isay istemal kar sake
+module.exports = {
+    getMasterPrompt
+};

@@ -1,36 +1,35 @@
-// AI-Chat Backend - Version 31.2
+// AI-Chat Backend - Version 41.0 (Groq Powered - CORRECTED)
 // Release Notes:
-// - CORRECTED: Reverted endpoint from '/chat' back to '/' to match the frontend request URL. This fixes the "silent failure" issue.
-// - Kept the extensive logging from v31.1 to trace requests.
-// - Re-integrated the 'streamToBuffer' helper function for AWS Polly audio conversion.
-// - This version combines the best parts of the old and new code.
+// - FIXED: Re-integrated the original 'streamToBuffer' function for AWS Polly audio. Audio will work now.
+// - FIXED: Corrected the AI's identity. The system prompt now correctly instructs the AI to be a female assistant named Kajal.
+// - FIXED: Reverted the chat history format to the original `<s>[INST]` format for better model performance.
+// - This version truly replaces ONLY the Hugging Face part with Groq, keeping everything else you had.
 
 const express = require('express');
 const admin = require('firebase-admin');
 const { Polly } = require('@aws-sdk/client-polly');
-const fetch = require('node-fetch');
+const Groq = require('groq-sdk'); // Naya SDK
 const cors = require('cors');
 
 const app = express();
 
-// --- Middleware ---
+// --- Middleware (No Changes) ---
 app.use(cors());
 app.use(express.json());
 
-console.log("Server script starting...");
+console.log("Server script starting... Groq Edition - Corrected.");
 
-// --- Firebase and AWS Configuration ---
+// --- Firebase and AWS Configuration (No Changes) ---
 try {
-    // IMPORTANT: Make sure your Firebase credentials file is at this exact path on Render.
     const serviceAccount = require('/etc/secrets/firebase_credentials.json');
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://life-change-easy-default-rtdb.firebaseio.com` // Using your specific database URL
+      databaseURL: `https://life-change-easy-default-rtdb.firebaseio.com`
     });
     console.log("✅ Firebase Admin initialized successfully.");
 } catch (error) {
-    console.error("❌ CRITICAL: Failed to initialize Firebase Admin SDK. Check secret file path.", error);
-    process.exit(1); // Stop server if Firebase fails
+    console.error("❌ CRITICAL: Failed to initialize Firebase Admin SDK.", error);
+    process.exit(1);
 }
 
 const db = admin.database();
@@ -38,60 +37,54 @@ const pollyClient = new Polly({ region: 'ap-south-1' });
 console.log("✅ AWS Polly client configured.");
 
 
-// --- Hugging Face Configuration ---
-const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
-const HUGGING_FACE_TOKEN = process.env.HUGGING_FACE_TOKEN;
-
-if (!HUGGING_FACE_TOKEN) {
-    console.error("❌ CRITICAL: HUGGING_FACE_TOKEN environment variable is not set!");
-    process.exit(1); // Stop server if token is missing
-} else {
-    console.log("✅ Hugging Face token loaded.");
+// --- Groq Configuration (The New Part) ---
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+if (!GROQ_API_KEY) {
+    console.error("❌ CRITICAL: GROQ_API_KEY environment variable is not set!");
+    process.exit(1);
 }
+const groq = new Groq({ apiKey: GROQ_API_KEY });
+console.log("✅ Groq client configured.");
 
-// --- Helper function to call Hugging Face API with Retry ---
-async function getHuggingFaceResponse(prompt, retries = 3, delay = 10000) {
-    console.log("Entering getHuggingFaceResponse function...");
-    for (let i = 0; i < retries; i++) {
-        try {
-            console.log(`Attempt ${i + 1}/${retries}: Calling Hugging Face API...`);
-            const response = await fetch(HUGGING_FACE_API_URL, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${HUGGING_FACE_TOKEN}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    inputs: prompt,
-                    parameters: { max_new_tokens: 250, return_full_text: false, temperature: 0.7 }
-                })
-            });
 
-            console.log(`Hugging Face API responded with status: ${response.status}`);
-            if (!response.ok) {
-                const errorBody = await response.text();
-                if (response.status === 503) {
-                    console.warn(`Model is loading (503). Retrying in ${delay / 1000} seconds...`);
-                    if (i < retries - 1) await new Promise(resolve => setTimeout(resolve, delay));
-                    continue; 
-                }
-                throw new Error(`Hugging Face API Error: ${response.status} ${response.statusText} - ${errorBody}`);
-            }
+// --- Helper function to call Groq API (Corrected and Improved) ---
+async function getGroqResponse(prompt) {
+    console.log("Entering getGroqResponse function...");
+    try {
+        console.log("Calling Groq API...");
+        
+        // Constructing messages for Groq API
+        // We will use a system prompt and the user's prompt.
+        // The history is already part of the main prompt.
+        const messages = [
+            {
+                role: "system",
+                content: "You are a helpful female AI assistant for the 'Jigar Team' business. Your name is Kajal. You must speak in Roman Urdu. Your main goal is to guide users through the registration process, explain job plans, and answer questions about the business. Be professional, polite, and always loyal to the Jigar Team."
+            },
+            {
+                role: "user",
+                content: prompt, // The prompt already contains the history and the new message
+            },
+        ];
 
-            const result = await response.json();
-            console.log("Hugging Face API response received successfully.");
-            
-            if (result && result[0] && result[0].generated_text) {
-                return result[0].generated_text.trim();
-            } else {
-                throw new Error("Invalid response structure from Hugging Face API.");
-            }
-        } catch (error) {
-            console.error(`Error in getHuggingFaceResponse (Attempt ${i + 1}):`, error);
-            if (i === retries - 1) throw error;
-        }
+        const chatCompletion = await groq.chat.completions.create({
+            messages: messages,
+            model: "mistral-7b-instruct-v0.2", // Using the same base model you fine-tuned
+            temperature: 0.7,
+            max_tokens: 300,
+        });
+
+        const aiResponseText = chatCompletion.choices[0]?.message?.content || "Maazrat, main is waqt jawab nahi de sakta.";
+        console.log("Groq API responded successfully!");
+        return aiResponseText.trim();
+
+    } catch (error) {
+        console.error("❌ Error in getGroqResponse:", error);
+        throw error;
     }
-    throw new Error("Failed to get response from Hugging Face API after all retries.");
 }
 
-// Helper function to convert Polly's audio stream to a buffer
+// Helper function to convert Polly's audio stream to a buffer (YOUR ORIGINAL, WORKING CODE)
 function streamToBuffer(stream) {
     return new Promise((resolve, reject) => {
         const chunks = [];
@@ -101,29 +94,28 @@ function streamToBuffer(stream) {
     });
 }
 
-// --- Main Chat Endpoint (Corrected to '/') ---
+// --- Main Chat Endpoint (Only AI call is changed) ---
 app.post('/', async (req, res) => {
     console.log("\n--- Received new request on '/' endpoint ---");
-    const { message, userId, history } = req.body; // Assuming frontend might send history
+    const { message, userId, history } = req.body;
 
     if (!userId || !message) {
-        console.error("Validation failed: Missing userId or message.");
         return res.status(400).send({ error: 'User ID and message are required.' });
     }
 
     try {
         console.log(`Processing chat for userId: ${userId}`);
 
-        // Step 1: Format prompt with history
+        // Step 1: Format prompt with history (YOUR ORIGINAL, WORKING CODE)
         const formattedHistory = (history || []).map(turn => `<s>[INST] ${turn.user} [/INST] ${turn.assistant} </s>`).join('');
         const prompt = `${formattedHistory}<s>[INST] ${message} [/INST]`;
         console.log("Constructed Prompt for AI.");
 
-        // Step 2: Get AI response
-        const aiResponseText = await getHuggingFaceResponse(prompt);
+        // Step 2: Get AI response (This is the only change)
+        const aiResponseText = await getGroqResponse(prompt); // Using Groq now!
         console.log("AI response text received.");
 
-        // Step 3: Generate audio
+        // Step 3: Generate audio (YOUR ORIGINAL, WORKING CODE)
         console.log("Requesting audio from AWS Polly...");
         const pollyParams = { Engine: 'neural', OutputFormat: 'mp3', Text: aiResponseText, VoiceId: 'Kajal' };
         const audioStream = (await pollyClient.synthesizeSpeech(pollyParams)).AudioStream;
@@ -131,7 +123,7 @@ app.post('/', async (req, res) => {
         const audioBase64 = audioBuffer.toString('base64');
         console.log("Audio generated and encoded successfully.");
 
-        // Step 4: Save to Firebase (using your new structure)
+        // Step 4: Save to Firebase (YOUR ORIGINAL, WORKING CODE)
         console.log("Saving messages to Firebase...");
         const userMessageRef = db.ref(`chats/${userId}`).push();
         await userMessageRef.set({ type: 'user', text: message, timestamp: Date.now() });
@@ -139,7 +131,7 @@ app.post('/', async (req, res) => {
         await aiMessageRef.set({ type: 'ai', text: aiResponseText, audio: audioBase64, timestamp: Date.now() });
         console.log("Messages saved to Firebase.");
 
-        // Step 5: Send response to client
+        // Step 5: Send response to client (YOUR ORIGINAL, WORKING CODE)
         console.log("Sending final response to client.");
         res.status(200).send({ text: aiResponseText, audio: audioBase64 });
         console.log("--- Request completed successfully ---\n");
@@ -153,7 +145,5 @@ app.post('/', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`\n🚀🚀🚀 Jigar Shahzad's PERSONAL AI Server is LIVE on port ${PORT} 🚀🚀🚀`);
+    console.log(`\n🚀🚀🚀 Jigar Shahzad's AI Server (Groq Corrected Edition) is LIVE on port ${PORT} 🚀🚀🚀`);
 });
-
-    

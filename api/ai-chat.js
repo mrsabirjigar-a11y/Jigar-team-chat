@@ -1,14 +1,12 @@
-// AI-Chat Backend - Version 41.0 (Groq Powered - CORRECTED)
+// AI-Chat Backend - Version 41.1 (Groq - CORRECTED MODEL NAME)
 // Release Notes:
-// - FIXED: Re-integrated the original 'streamToBuffer' function for AWS Polly audio. Audio will work now.
-// - FIXED: Corrected the AI's identity. The system prompt now correctly instructs the AI to be a female assistant named Kajal.
-// - FIXED: Reverted the chat history format to the original `<s>[INST]` format for better model performance.
-// - This version truly replaces ONLY the Hugging Face part with Groq, keeping everything else you had.
+// - CRITICAL FIX: Corrected the Groq model name from the non-existent 'mistral-7b-instruct-v0.2' to the correct, available model 'mixtral-8x7b-32768'.
+// - This was the cause of the "model_not_found" error. Everything else remains the same.
 
 const express = require('express');
 const admin = require('firebase-admin');
 const { Polly } = require('@aws-sdk/client-polly');
-const Groq = require('groq-sdk'); // Naya SDK
+const Groq = require('groq-sdk');
 const cors = require('cors');
 
 const app = express();
@@ -17,7 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log("Server script starting... Groq Edition - Corrected.");
+console.log("Server script starting... Groq Edition - Final Fix.");
 
 // --- Firebase and AWS Configuration (No Changes) ---
 try {
@@ -37,7 +35,7 @@ const pollyClient = new Polly({ region: 'ap-south-1' });
 console.log("✅ AWS Polly client configured.");
 
 
-// --- Groq Configuration (The New Part) ---
+// --- Groq Configuration (No Changes) ---
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 if (!GROQ_API_KEY) {
     console.error("❌ CRITICAL: GROQ_API_KEY environment variable is not set!");
@@ -47,15 +45,12 @@ const groq = new Groq({ apiKey: GROQ_API_KEY });
 console.log("✅ Groq client configured.");
 
 
-// --- Helper function to call Groq API (Corrected and Improved) ---
+// --- Helper function to call Groq API (Model Name Corrected) ---
 async function getGroqResponse(prompt) {
     console.log("Entering getGroqResponse function...");
     try {
-        console.log("Calling Groq API...");
+        console.log("Calling Groq API with the CORRECT model name...");
         
-        // Constructing messages for Groq API
-        // We will use a system prompt and the user's prompt.
-        // The history is already part of the main prompt.
         const messages = [
             {
                 role: "system",
@@ -63,13 +58,14 @@ async function getGroqResponse(prompt) {
             },
             {
                 role: "user",
-                content: prompt, // The prompt already contains the history and the new message
+                content: prompt,
             },
         ];
 
         const chatCompletion = await groq.chat.completions.create({
             messages: messages,
-            model: "mistral-7b-instruct-v0.2", // Using the same base model you fine-tuned
+            // --- THIS IS THE CRITICAL FIX ---
+            model: "mixtral-8x7b-32768", // Using the correct model name available on Groq
             temperature: 0.7,
             max_tokens: 300,
         });
@@ -84,7 +80,7 @@ async function getGroqResponse(prompt) {
     }
 }
 
-// Helper function to convert Polly's audio stream to a buffer (YOUR ORIGINAL, WORKING CODE)
+// Helper function to convert Polly's audio stream to a buffer (No Changes)
 function streamToBuffer(stream) {
     return new Promise((resolve, reject) => {
         const chunks = [];
@@ -94,7 +90,7 @@ function streamToBuffer(stream) {
     });
 }
 
-// --- Main Chat Endpoint (Only AI call is changed) ---
+// --- Main Chat Endpoint (No Changes) ---
 app.post('/', async (req, res) => {
     console.log("\n--- Received new request on '/' endpoint ---");
     const { message, userId, history } = req.body;
@@ -106,16 +102,13 @@ app.post('/', async (req, res) => {
     try {
         console.log(`Processing chat for userId: ${userId}`);
 
-        // Step 1: Format prompt with history (YOUR ORIGINAL, WORKING CODE)
         const formattedHistory = (history || []).map(turn => `<s>[INST] ${turn.user} [/INST] ${turn.assistant} </s>`).join('');
         const prompt = `${formattedHistory}<s>[INST] ${message} [/INST]`;
         console.log("Constructed Prompt for AI.");
 
-        // Step 2: Get AI response (This is the only change)
-        const aiResponseText = await getGroqResponse(prompt); // Using Groq now!
+        const aiResponseText = await getGroqResponse(prompt);
         console.log("AI response text received.");
 
-        // Step 3: Generate audio (YOUR ORIGINAL, WORKING CODE)
         console.log("Requesting audio from AWS Polly...");
         const pollyParams = { Engine: 'neural', OutputFormat: 'mp3', Text: aiResponseText, VoiceId: 'Kajal' };
         const audioStream = (await pollyClient.synthesizeSpeech(pollyParams)).AudioStream;
@@ -123,7 +116,6 @@ app.post('/', async (req, res) => {
         const audioBase64 = audioBuffer.toString('base64');
         console.log("Audio generated and encoded successfully.");
 
-        // Step 4: Save to Firebase (YOUR ORIGINAL, WORKING CODE)
         console.log("Saving messages to Firebase...");
         const userMessageRef = db.ref(`chats/${userId}`).push();
         await userMessageRef.set({ type: 'user', text: message, timestamp: Date.now() });
@@ -131,7 +123,6 @@ app.post('/', async (req, res) => {
         await aiMessageRef.set({ type: 'ai', text: aiResponseText, audio: audioBase64, timestamp: Date.now() });
         console.log("Messages saved to Firebase.");
 
-        // Step 5: Send response to client (YOUR ORIGINAL, WORKING CODE)
         console.log("Sending final response to client.");
         res.status(200).send({ text: aiResponseText, audio: audioBase64 });
         console.log("--- Request completed successfully ---\n");
@@ -145,5 +136,5 @@ app.post('/', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`\n🚀🚀🚀 Jigar Shahzad's AI Server (Groq Corrected Edition) is LIVE on port ${PORT} 🚀🚀🚀`);
+    console.log(`\n🚀🚀🚀 Jigar Shahzad's AI Server (Groq Final Fix) is LIVE on port ${PORT} 🚀🚀🚀`);
 });

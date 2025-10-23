@@ -39,7 +39,7 @@ console.log("✅ AWS Polly client configured.");
 
 
 // --- Hugging Face Configuration ---
-const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
+const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/sabirj/jigar-shahzad-ai-mistral-v1";
 const HUGGING_FACE_TOKEN = process.env.HUGGING_FACE_TOKEN;
 
 if (!HUGGING_FACE_TOKEN) {
